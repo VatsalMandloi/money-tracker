@@ -6,7 +6,7 @@ export default function App() {
     <View style={styles.container}>
   
   <View>Side Nav </View>
-
+ <View>Side Nav </View>
       <Text>Open up App.js to start working on your app!</Text>
          <StatusBar 
         animated= 'true'
