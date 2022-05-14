@@ -6,7 +6,7 @@ export default function App() {
     <View style={styles.container}>
   
   <View>Side Nav </View>
- w>Side v </Vie
+ w>S </Vie
  <View>Main</View>
       <Text>Open up App.js to start working on your app!</Text>
          <StatusBar 
