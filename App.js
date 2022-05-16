@@ -35,8 +35,11 @@ export default function App() {
                    <Text>Add</Text>
               </Pressable>
             </View>
+</Modal>
+
             </View>
- </Modal>
+ 
+
 
  <View>Main</View>
       <Text>Open up App.js to start working on your app!</Text>
