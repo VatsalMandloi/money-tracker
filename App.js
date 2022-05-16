@@ -14,7 +14,10 @@ export default function App() {
             setmodalVisibal(!modalVisible);
           }} 
           transparent={true}
-          > </View>
+          >
+             <View>
+            <Text>Add Account</Text>
+            </View>
 
 
  <View>Main</View>
