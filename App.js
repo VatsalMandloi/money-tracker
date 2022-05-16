@@ -5,7 +5,18 @@ export default function App() {
   return (
     <View style={styles.container}>
   
-  <View>Side Nav </View>
+
+  <View>
+  <Modal
+          visible={modalVisible}
+          animationType="slide"
+          onRequestClose={() => {
+            setmodalVisibal(!modalVisible);
+          }} 
+          transparent={true}
+          > </View>
+
+
  <View>Main</View>
       <Text>Open up App.js to start working on your app!</Text>
          <StatusBar 
