@@ -35,9 +35,18 @@ export default function App() {
                    <Text>Add</Text>
               </Pressable>
             </View>
-</Modal>
+            
+         </View>
+          
+        </Modal>
+        <Pressable
+          onPress={() => {
+            setmodalVisibal(!modalVisible);
+        }}>
+          <Text>+</Text>
+        </Pressable>
+     </View>
 
-            </View>
  
 
 
