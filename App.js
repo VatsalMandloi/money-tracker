@@ -33,6 +33,9 @@ export default function App() {
                 <Pressable
                 onPress={handleSubmit}
               >
+                   <Text>Add</Text>
+              </Pressable>
+            </View>
             </View>
 
 
