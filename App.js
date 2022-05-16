@@ -4,7 +4,6 @@ import { StyleSheet, Text, View } from 'react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-  
 
   <View>
   <Modal
@@ -37,7 +36,7 @@ export default function App() {
               </Pressable>
             </View>
             </View>
-
+ </Modal>
 
  <View>Main</View>
       <Text>Open up App.js to start working on your app!</Text>
