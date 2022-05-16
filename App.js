@@ -17,6 +17,11 @@ export default function App() {
           >
              <View>
             <Text>Add Account</Text>
+            <TextInput
+              placeholder='Enter Account name'
+              value={account}
+              onChangeText={setAccount}
+            />
             </View>
 
 
