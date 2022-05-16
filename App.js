@@ -22,6 +22,14 @@ export default function App() {
               value={account}
               onChangeText={setAccount}
             />
+                  <View>
+              <Pressable
+                onPress={() => {
+                  setmodalVisibal(!modalVisible);
+                }}
+              >
+                <Text>Close</Text>
+              </Pressable>
             </View>
 
 
