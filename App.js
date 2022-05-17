@@ -47,7 +47,7 @@ export default function App() {
         </Pressable>
      </View>
 
- 
+
 
  <View>Main</View>
       <Text>Open up App.js to start working on your app!</Text>
