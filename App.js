@@ -6,6 +6,7 @@ export default function App() {
     <View style={styles.container}>
 
   <View>
+  
   <Modal
           visible={modalVisible}
           animationType="slide"
