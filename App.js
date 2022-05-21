@@ -37,15 +37,16 @@ export default function App() {
               </Pressable>
             </View>
             
-         </View>
-          
+         </View> 
         </Modal>
+
         <Pressable
           onPress={() => {
             setmodalVisibal(!modalVisible);
         }}>
           <Text>+</Text>
         </Pressable>
+
      </View>
 
  <View>Main</View>
