@@ -72,14 +72,26 @@ function Items({ done: doneHeading, onPressItem }) {
 
 export default function App() {
   const [text, setText] = useState(null);
+  const [desc, setDesc] = useState(null);
+  const [amount, setAmount] = useState(null);
+  const [title, setTitle] = useState(null);
+  const [tpay, setTpay] = useState(null);
+  const [treceive, setTreceive] = useState(null);
+  const [total, setTotal] = useState(null);
   const [forceUpdate, forceUpdateId] = useForceUpdate();
-  const [modalVisible,setmodalVisibal] = useState(false)
+  const [modalVisible, setmodalVisibal] = useState(false);
+  const [PayModalVisible, setPayModalVisible] = useState(false);
+  const [RmodalVisible, setRmodalVisible] = useState(false);
+
 
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists accounts (id integer primary key not null, done int, name text);"
+        "create table if not exists accounts (id integer primary key not null,done int, name text, tpay real, treceive real, total real);"
       );
+      tx.executeSql(
+      "create table if not exists tansactions(id integer primary key not null, name text, desc text, date date, amount real, side int)"
+      )
     });
   }, []);
 
@@ -92,7 +104,7 @@ export default function App() {
 
       db.transaction(
         (tx) => {
-          tx.executeSql("insert into accounts (done, name) values (0, ?)", [text]);
+          tx.executeSql("insert into accounts (done, name, tpay, treceive,total) values (0, ?, 0, 0, 0)", [text]);
           tx.executeSql("select * from accounts", [], (_, { rows }) =>
             console.log(JSON.stringify(rows))
           );
@@ -101,6 +113,14 @@ export default function App() {
         forceUpdate
       );
     setmodalVisibal(!modalVisible)}
+  };
+
+  const addReceive = (desc, amount) => {
+
+  };
+
+  const addPay = (desc, amount) => {
+
   };
 
   return (
@@ -129,8 +149,8 @@ export default function App() {
           transparent={true}
           >
 
-                <View style={styles.flexColumn}>
-                  <Text>Add Account</Text>
+            <View style={styles.flexColumn}>
+            <Text>Add Account</Text>
             <TextInput
               onChangeText={(text) => setText(text)}
               onSubmitEditing={() => {
@@ -193,6 +213,144 @@ export default function App() {
         }}>
           <Text> + </Text>
         </Pressable>
+            </View>
+            
+            <View>
+              
+            <Modal
+
+visible={PayModalVisible}
+animationType="slide"
+onRequestClose={() => {
+  setPayModalVisible(!PayModalVisible);
+}} 
+transparent={true}
+>
+
+  <View style={styles.flexColumn}>
+  <Text>Add Receiving Details</Text>
+    <View style={styles.flexColumn}>
+    <TextInput
+    onChangeText={(desc) => setDesc(desc)}
+    onSubmitEditing={() => {
+      
+      setText(null);
+    }}
+    placeholder="Enter Description to remember"
+    style={styles.input}
+    value={desc}
+                    />
+   <TextInput
+    onChangeText={(amount) => setAmount(amount)}
+    onSubmitEditing={() => {
+     
+      setAmount(null);
+    }}
+    placeholder="Enter Amount"
+    style={styles.input}
+    value={amount}
+        />
+      </View>
+        <View style={styles.flexRow}>
+          <Pressable
+            onPress={() => {
+              setRmodalVisible(!RmodalVisible);
+              setAmount(null);
+            }}>
+            <Text>Close</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => { addPay(desc, amount) }}
+    >
+      <Text>Add</Text>
+    </Pressable>
+        </View>
+      </View>
+              </Modal>
+              <Modal
+
+visible={PayModalVisible}
+animationType="slide"
+onRequestClose={() => {
+  setPayModalVisible(!PayModalVisible);
+}} 
+transparent={true}
+>
+
+  <View style={styles.flexColumn}>
+  <Text>Add Receiving Details</Text>
+    <View style={styles.flexColumn}>
+    <TextInput
+    onChangeText={(desc) => setDesc(desc)}
+    onSubmitEditing={() => {
+      
+      setText(null);
+    }}
+    placeholder="Enter Description to remember"
+    style={styles.input}
+    value={desc}
+                    />
+   <TextInput
+    onChangeText={(amount) => setAmount(amount)}
+    onSubmitEditing={() => {
+     
+      setAmount(null);
+    }}
+    placeholder="Enter Amount"
+    style={styles.input}
+    value={amount}
+        />
+      </View>
+        <View style={styles.flexRow}>
+          <Pressable
+            onPress={() => {
+              setRmodalVisible(!RmodalVisible);
+              setAmount(null);
+            }}>
+            <Text>Close</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => { addReceive(desc, amount) }}
+    >
+      <Text>Add</Text>
+    </Pressable>
+        </View>
+      </View>
+              </Modal> 
+
+            <View>
+              <Text>Title</Text>
+              <View style={styles.flexRow}>
+                <Text>Tpay</Text>
+                <Text>Treceive</Text>
+              </View>
+              </View>
+              
+            <View>
+              <Text>CHat area</Text>
+              </View>
+              
+            <View>
+              <Text>Total: </Text>
+            <View style={styles.flexRow}>
+
+                  <Pressable
+                   onPress={() => {
+              setPayModalVisible(!PayModalVisible);              
+            }}>
+                <Text>Pay</Text>
+                  </Pressable>
+                  
+                  <Pressable
+                   onPress={() => {
+              setRmodalVisible(!RmodalVisible);
+            }}>
+                <Text>Receive</Text>
+            </Pressable>
+              </View>
+              </View>
+
+
               </View>
         </>
       )}
@@ -211,7 +369,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     flex: 1,
     paddingTop: Constants.statusBarHeight,
-    flexDirection: "column"
+    flexDirection: "row"
   },
   heading: {
     fontSize: 20,
