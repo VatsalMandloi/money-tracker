@@ -1,38 +1,124 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, Modal, Pressable, FlatList } from 'react-native';
-import { useState } from 'react';
-import * as SQLite from 'expo-sqlite';
+import { useState, useEffect } from "react";
+import {
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Modal,
+  Pressable,
+} from "react-native";
+import Constants from "expo-constants";
+import * as SQLite from "expo-sqlite";
+
+function openDatabase() {
+  if (Platform.OS === "web") {
+    return {
+      transaction: () => {
+        return {
+          executeSql: () => {},
+        };
+      },
+    };
+  }
+
+  const db = SQLite.openDatabase("db.db");
+  return db;
+}
+
+const db = openDatabase();
+
+function Items({ done: doneHeading, onPressItem }) {
+  const [items, setItems] = useState(null);
+
+  useEffect(() => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        `select * from items where done = ?;`,
+        [doneHeading ? 1 : 0],
+        (_, { rows: { _array } }) => setItems(_array)
+      );
+    });
+  }, []);
+
+  const heading = doneHeading ? "Completed" : "Todo";
+
+  if (items === null || items.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.sectionContainer}>
+      <Text style={styles.sectionHeading}>{heading}</Text>
+      {items.map(({ id, done, value }) => (
+        <TouchableOpacity
+          key={id}
+          onPress={() => onPressItem && onPressItem(id)}
+          style={{
+            backgroundColor: done ? "#1c9963" : "#fff",
+            borderColor: "#000",
+            borderWidth: 1,
+            padding: 8,
+          }}
+        >
+          <Text style={{ color: done ? "#fff" : "#000" }}>{value}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
 
 export default function App() {
+  const [text, setText] = useState(null);
+  const [forceUpdate, forceUpdateId] = useForceUpdate();
+  const [modalVisible,setmodalVisibal] = useState(false)
 
-  const [modalVisible, setmodalVisibal] = useState(false);
-  const [account, setAccount] = useState('');
+  useEffect(() => {
+    db.transaction((tx) => {
+      tx.executeSql(
+        "create table if not exists items (id integer primary key not null, done int, value text);"
+      );
+    });
+  }, []);
 
-  const db = SQLite.openDatabase("database.db");
+  const add = (text) => {
+    // is text empty?
+    if (text === null || text === "") {
+      return false;
+    }
+    else {
 
-  const handleSubmit = () => {
-   
-  }
+      db.transaction(
+        (tx) => {
+          tx.executeSql("insert into items (done, value) values (0, ?)", [text]);
+          tx.executeSql("select * from items", [], (_, { rows }) =>
+            console.log(JSON.stringify(rows))
+          );
+        },
+        null,
+        forceUpdate
+      );
+    setmodalVisibal(!modalVisible)}
+  };
+
   return (
     <View style={styles.container}>
      
-      <View style={styles.sidenav}>
-       
-        <View>
-          <FlatList>
-            data={Accounts}
-            keyExtractor={account => account._id.toString()}
-            renderItem={({ account }) => (
-             
-              <View>
-                <Text>{account.Account} </Text>
-              </View>
-              
-            )}
 
-          </FlatList>
+      {Platform.OS === "web" ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text style={styles.heading}>
+            Expo SQlite is not supported on web!
+          </Text>
         </View>
-        <Modal
+      ) : (
+          <>
+            <View  style={styles.flexRow}> 
+            <Modal
           visible={modalVisible}
           animationType="slide"
           onRequestClose={() => {
@@ -40,61 +126,120 @@ export default function App() {
           }} 
           transparent={true}
           >
-          <View>
-            <Text>Add Account</Text>
+                <View style={styles.flexColumn}>
+                  <Text>Add Account</Text>
             <TextInput
-              placeholder='Enter Account name'
-              value={account}
-              onChangeText={setAccount}
-            />
-            <View>
-              <Pressable
-                onPress={() => {
-                  setmodalVisibal(!modalVisible);
-                }}
-              >
-                <Text>Close</Text>
-              </Pressable>
-              <Pressable
-                onPress={handleSubmit}
+              onChangeText={(text) => setText(text)}
+              onSubmitEditing={() => {
+                add(text);
+                setText(null);
+              }}
+              placeholder="Enter name to recognize"
+              style={styles.input}
+              value={text}
+                  />
+                  <View style={styles.flexRow}>
+                    <Pressable
+                      onPress={() => {
+                        setmodalVisibal(!modalVisible);
+                        setText(null);
+                      }}>
+                      <Text>Close</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => { add(text) }}
               >
                 <Text>Add</Text>
               </Pressable>
-            </View>
-            
-         </View>
-          
-        </Modal>
-        <Pressable
+                  </View>
+                </View>
+                </Modal>
+          <ScrollView style={styles.listArea}>
+            <Items
+              key={`forceupdate-todo-${forceUpdateId}`}
+              done={false}
+              onPressItem={(id) =>
+                db.transaction(
+                  (tx) => {
+                    tx.executeSql(`update items set done = 1 where id = ?;`, [
+                      id,
+                    ]);
+                  },
+                  null,
+                  forceUpdate
+                )
+              }
+            />
+            <Items
+              done
+              key={`forceupdate-done-${forceUpdateId}`}
+              onPressItem={(id) =>
+                db.transaction(
+                  (tx) => {
+                    tx.executeSql(`delete from items where id = ?;`, [id]);
+                  },
+                  null,
+                  forceUpdate
+                )
+              }
+            />
+              </ScrollView>
+              <Pressable
           onPress={() => {
             setmodalVisibal(!modalVisible);
         }}>
-          <Text>+</Text>
+          <Text> + </Text>
         </Pressable>
-     </View>
-
-      
-
-      <View style={styles.main}>
-       
-      </View>
-     
-      <Text>Open up App.js to start working on your </Text>
-     
-      <StatusBar 
-        backgroundColor='#ff6961'
-        barStyle='dark-content'
-        
-      />
-    </View>  
+              </View>
+        </>
+      )}
+    </View>
   );
+}
+
+function useForceUpdate() {
+  const [value, setValue] = useState(0);
+  return [() => setValue(value + 1), value];
 }
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#fff",
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: Constants.statusBarHeight,
+    flexDirection: "column"
+  },
+  heading: {
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  flexRow: {
+    flexDirection: "row",
+  },
+  flexColumn: {
+  flexDirection:"column",
+  },
+  input: {
+    borderColor: "#4630eb",
+    borderRadius: 4,
+    borderWidth: 1,
+    flex: 1,
+    height: 48,
+    margin: 16,
+    padding: 8,
+  },
+  listArea: {
+    backgroundColor: "#f0f0f0",
+    flex: 1,
+    paddingTop: 16,
+  },
+  sectionContainer: {
+    marginBottom: 16,
+    marginHorizontal: 16,
+  },
+  sectionHeading: {
+    fontSize: 18,
+    marginBottom: 8,
   },
 });
