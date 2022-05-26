@@ -78,7 +78,7 @@ export default function App() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists accounts (id integer primary key not null, done int, value text);"
+        "create table if not exists accounts (id integer primary key not null, done int, name text);"
       );
     });
   }, []);
@@ -92,7 +92,7 @@ export default function App() {
 
       db.transaction(
         (tx) => {
-          tx.executeSql("insert into accounts (done, value) values (0, ?)", [text]);
+          tx.executeSql("insert into accounts (done, name) values (0, ?)", [text]);
           tx.executeSql("select * from accounts", [], (_, { rows }) =>
             console.log(JSON.stringify(rows))
           );
