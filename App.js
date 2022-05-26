@@ -105,6 +105,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
+
      
 
       {Platform.OS === "web" ? (
@@ -119,6 +120,7 @@ export default function App() {
           <>
             <View  style={styles.flexRow}> 
             <Modal
+
           visible={modalVisible}
           animationType="slide"
           onRequestClose={() => {
@@ -126,6 +128,7 @@ export default function App() {
           }} 
           transparent={true}
           >
+
                 <View style={styles.flexColumn}>
                   <Text>Add Account</Text>
             <TextInput
@@ -193,6 +196,7 @@ export default function App() {
               </View>
         </>
       )}
+
     </View>
   );
 }
