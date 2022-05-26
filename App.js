@@ -36,7 +36,7 @@ function Items({ done: doneHeading, onPressItem }) {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        `select * from items where done = ?;`,
+        `select * from accounts where done = ?;`,
         [doneHeading ? 1 : 0],
         (_, { rows: { _array } }) => setItems(_array)
       );
@@ -78,7 +78,7 @@ export default function App() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists items (id integer primary key not null, done int, value text);"
+        "create table if not exists accounts (id integer primary key not null, done int, value text);"
       );
     });
   }, []);
@@ -92,8 +92,8 @@ export default function App() {
 
       db.transaction(
         (tx) => {
-          tx.executeSql("insert into items (done, value) values (0, ?)", [text]);
-          tx.executeSql("select * from items", [], (_, { rows }) =>
+          tx.executeSql("insert into accounts (done, value) values (0, ?)", [text]);
+          tx.executeSql("select * from accounts", [], (_, { rows }) =>
             console.log(JSON.stringify(rows))
           );
         },
@@ -161,7 +161,7 @@ export default function App() {
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`update items set done = 1 where id = ?;`, [
+                    tx.executeSql(`update accounts set done = 1 where id = ?;`, [
                       id,
                     ]);
                   },
@@ -176,7 +176,7 @@ export default function App() {
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`delete from items where id = ?;`, [id]);
+                    tx.executeSql(`delete from accounts where id = ?;`, [id]);
                   },
                   null,
                   forceUpdate
