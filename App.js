@@ -135,7 +135,6 @@ export default function App() {
     setId(id);
     
   }
-
   return (
     <View style={styles.container}>
 
