@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
+import { FlatList } from "react-native-web";
 
 function openDatabase() {
   if (Platform.OS === "web") {
@@ -30,51 +31,50 @@ function openDatabase() {
 
 const db = openDatabase();
 
-function Items({ done: doneHeading, onPressItem }) {
-  const [items, setItems] = useState(null);
+// function Items({accounts, onPressItem }) {
+//   const [items, setItems] = useState(accounts);
 
-  useEffect(() => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        `select * from accounts where done = ?;`,
-        [doneHeading ? 1 : 0],
-        (_, { rows: { _array } }) => setItems(_array)
-      );
-    });
-  }, []);
+//   useEffect(() => {
+//     db.transaction((tx) => {
+//       tx.executeSql(
+//         'select * from accounts;',
+//         (_, { rows: { _array } }) => setItems(_array)
+//       );
+//     });
+//   }, []);
 
-  const heading = doneHeading ? "Completed" : "Todo";
+  
 
-  if (items === null || items.length === 0) {
-    return null;
-  }
+//   if (items === null || items.length === 0) {
+//     return null;
+//   }
 
-  return (
-    <View style={styles.sectionContainer}>
-      <Text style={styles.sectionHeading}>{heading}</Text>
-      {items.map(({ id, done, name }) => (
-        <TouchableOpacity
-          key={id}
-          onPress={() => onPressItem && onPressItem(id)}
-          style={{
-            backgroundColor: done ? "#1c9963" : "#fff",
-            borderColor: "#000",
-            borderWidth: 1,
-            padding: 8,
-          }}
-        >
-          <Text style={{ color: done ? "#fff" : "#000" }}>{name}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
+//   return (
+//     <View style={styles.sectionContainer}>
+//       {items.map(({ id, name }) => (
+//         <TouchableOpacity
+//           key={id}
+//           onPress={() => onPressItem && onPressItem(id)}
+//           style={{
+//             backgroundColor:"#fff",
+//             borderColor: "#000",
+//             borderWidth: 1,
+//             padding: 8,
+//           }}
+//         >
+//           <Text>{name}</Text>
+//         </TouchableOpacity>
+//       ))}
+//     </View>
+//   );
+// }
 
 export default function App() {
   const [text, setText] = useState(null);
   const [id, setId] = useState(null);
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
+  const [accounts, setaccounts] = useState(null);
   const [title, setTitle] = useState(null);
   const [tpay, setTpay] = useState(null);
   const [treceive, setTreceive] = useState(null);
@@ -83,16 +83,17 @@ export default function App() {
   const [modalVisible, setmodalVisibal] = useState(false);
   const [tranModalVisible, setTranModalVisible] = useState(false);
   const [side, setSide] = useState(null);
+  const [color, setColor] = useState(null);
   const pay = 1;
   const receive = 0;
 
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists accounts (id integer primary key not null,done int, name text, tpay real, treceive real, total real);"
+        "create table if not exists accounts (id integer primary key not null, name text, tpay real, treceive real, total real);"
       );
       tx.executeSql(
-      "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)"
+        "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)"
       )
     });
   }, []);
@@ -108,13 +109,15 @@ export default function App() {
         (tx) => {
           tx.executeSql("insert into accounts (done, name, tpay, treceive,total) values (0, ?, 0, 0, 0)", [text]);
           tx.executeSql("select * from accounts", [], (_, { rows }) =>
-            console.log(JSON.stringify(rows))
+            console.log(JSON.stringify(rows)),
+            setaccounts(rows)
           );
         },
         null,
         forceUpdate
       );
-    setmodalVisibal(!modalVisible)}
+      setmodalVisibal(!modalVisible)
+    }
   };
 
   const addTransaction = (desc, amount, side) => {
@@ -131,11 +134,13 @@ export default function App() {
       setTranModalVisible(!tranModalVisible);
     }
   };
+ 
 
   const updateMain = (id) => {
     setId(id);
     
   }
+
 
   return (
     <View style={styles.container}>
@@ -152,13 +157,13 @@ export default function App() {
           <>
             <View  style={styles.flexColumn}> 
             <Modal
-
-          visible={modalVisible}
-          animationType="slide"
-          onRequestClose={() => {
-            setmodalVisibal(!modalVisible);
+                transparent={true}
+                visible={modalVisible}
+                animationType="slide"
+                onRequestClose={() => {
+                  setmodalVisibal(!modalVisible);
           }} 
-          transparent={true}
+         
           >
 
         <View style={[styles.centreModal, styles.flexColumn]}>
@@ -183,30 +188,36 @@ export default function App() {
                         setText(null);
                         }}
                       style={[styles.modalBtn, styles.modalClose]}>
-                      <Text>Close</Text>
+                        {({ pressed }) => (<Text style={{
+                          color: pressed ? "#ffbd59" : "grey",
+                          fontSize: 16,
+                          marginRight:25, }}>Close</Text>)}
                       </Pressable>
                       
                     <Pressable
                         onPress={() => {
                           add(text);
                           setText(null);}}
-                        style={[styles.modalBtn, styles.modalAdd]}
+                        style={({ pressed }) => [{backgroundColor:pressed?"darkorange":"#ffbd59"},styles.modalBtn, styles.modalAdd]}
                       >
-                <Text>Add</Text>
+                <Text style={{color:"white"}}>Add 🤗</Text>
               </Pressable>
                   </View>
                 </View>
                 </View>
               </Modal>
               
-          <ScrollView style={styles.listArea}>
+        
+         
+              
+           {/* <ScrollView style={styles.listArea}>
             <Items
               key={`forceupdate-todo-${forceUpdateId}`}
-              done={false}
+             
               onPressItem={(id) =>
                 db.transaction(
                   (tx) => {
-                    tx.executeSql(`update accounts set done = 1 where id = ?;`, [
+                    tx.executeSql(`select * from transaction where id = ?;`, [
                       id,
                     ]);
                   },
@@ -215,35 +226,21 @@ export default function App() {
                 )
               }
             />
-            <Items
-              done
-              key={`forceupdate-done-${forceUpdateId}`}
-              onPressItem={(id) =>
-                db.transaction(
-                  (tx) => {
-                    tx.executeSql(`delete from accounts where id = ?;`, [id]);
-                  },
-                  null,
-                  forceUpdate,
-                  updateMain(id),
-                )
-              }
-            />
-              </ScrollView>
+          
+              </ScrollView>  */}
+            
               <Pressable
           onPress={() => {
             setmodalVisibal(!modalVisible);
                 }}
-              style={styles.addBtn}>
-          <Text style={styles.addBtnText}> + </Text>
+              style={({ pressed }) => [{backgroundColor:pressed?"darkorange":"#ffbd59"},styles.addBtn]}>
+                <Text style={[styles.addBtnText,
+                {color:"white"}]}> + </Text>
         </Pressable>
             </View>
             
 
-            {id === null ? (<View>
-              <Text>CHoose an account to continue</Text>
-           </View>):( <View>
-              
+           <View style={[styles.main, styles.flexColumn]}> 
             <Modal
 
               visible={tranModalVisible}
@@ -276,7 +273,8 @@ export default function App() {
                   }}
                   placeholder="Enter Amount"
                   style={styles.input}
-                  value={amount}
+                        value={amount}
+                    keyboardType={"numeric"}
                       />
                     </View>
                       <View style={styles.flexRow}>
@@ -286,17 +284,20 @@ export default function App() {
                             setAmount(null);
                             setDesc(null);
                           }}
-                          style={[styles.modalBtn, styles.modalClose]}>
-                          <Text>Close</Text>
+                        style={ [styles.modalBtn, styles.modalClose]}>
+                         {({ pressed }) => (<Text style={{
+                          color: pressed ? "#ffbd59" : "grey",
+                          fontSize: 16,
+                          marginRight:25, }}>Close</Text>)}
                         </Pressable>
                         <Pressable
                           onPress={() => {
                             addTransaction(desc, amount, side);
                             setAmount(null);
                             setDesc(null);}}
-                          style={[styles.modalBtn, styles.modalAdd]}
+                        style={({ pressed }) => [{backgroundColor:pressed?"darkorange":"#ffbd59"},styles.modalBtn, styles.modalAdd]}
                         >
-                    <Text>Add</Text>
+                    <Text style={{color:"white"}}>Add 💸</Text>
                   </Pressable>
                       </View>
                     </View>
@@ -304,42 +305,63 @@ export default function App() {
                             </Modal>
                           
 
-                          <View>
-                            <Text>Title</Text>
-                            <View style={styles.flexRow}>
-                              <Text>Tpay</Text>
-                              <Text>Treceive</Text>
+                          <View style={[styles.mainHeader, styles.flexColumn]}>
+                <Text style={styles.title}>Title:{title}</Text>
+                            <View style={[styles.flexRow, styles.subpart]}>
+                  <Text style={[{ color: "#ff5757" }, styles.headersub]}>To pay:{tpay}</Text>
+                  
+                  <Text style={[{ color: "#7ed975" }, styles.headersub]}>To receive: { treceive}</Text>
                             </View>
                             </View>
                             
-                          <View>
-                            <Text>CHat area</Text>
+                          <View style={[styles.chat, styles.flexColumn]}>
+                <Text>CHat area</Text>
+              
+                <View style={ side ?styles.chatRight:styles.chatLeft}>
+                  <Text>date</Text>
+                  <Text>desc</Text>
+                  <Text>amount</Text>
+
+                            </View>
+
                             </View>
                             
-                          <View>
-                            <Text>Total: </Text>
+              <View style={[styles.mainBottom, styles.flexColumn]}>
+                
+                <Text style={{
+                  fontSize: 18,
+                  paddingHorizontal: 5,
+                  margin: 5,
+                  color:"white",
+               }}>Net Total: {total} </Text>
                           <View style={styles.flexRow}>
 
                                 <Pressable
                                 onPress={() => {
                                     setTranModalVisible(!tranModalVisible);    
                                     setSide(pay);        
-                          }}>
-                              <Text>Pay</Text>
+                    }}
+                    style={({ pressed })=>[{
+                      backgroundColor:pressed?"red":"#ff5757",
+                   }, styles.Btn]}>
+                              <Text style={{ color:"white"}}>📤 Pay</Text>
                                 </Pressable>
                                 
                                 <Pressable
                                 onPress={() => {
                                   setTranModalVisible(!tranModalVisible);    
                                     setSide(receive); 
-                          }}>
-                              <Text>Receive</Text>
+                    }}
+                    style={({ pressed })=>[{
+                      backgroundColor:pressed?"green":"#7ed975",
+                   }, styles.Btn]}>
+                              <Text style={{ color:"white"}}>📥 Receive</Text>
                           </Pressable>
                             </View>
                             </View>
 
 
-              </View>)}
+              </View>
         </>
       )}
 
@@ -353,11 +375,70 @@ function useForceUpdate() {
 }
 
 const styles = StyleSheet.create({
+  main: {
+    flex:1,
+    
+   
+  },
+  
+  mainHeader: {
+    flex: 1,
+    backgroundColor: "#545454",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    
+  },
+
+  title: {
+    fontSize: 22,
+    color:"white",
+    justifyContent:"space-evenly"
+},
+
+  headersub: {
+    fontSize:16,
+    margin: 5,
+    padding: 5,
+   
+  },
+
+  subpart: {
+    justifyContent: "center",
+    alignItems:"center"
+},
+
+  chat: {
+    height: 100,
+    flex: 4,
+    backgroundColor:"#fff"
+  },
+
+  mainBottom: {
+    flex:1,
+ 
+    backgroundColor: "#545454",
+    justifyContent: "space-evenly",
+ 
+    
+  },
+
+  Btn: {
+    padding: 10,
+    margin: 10,
+    paddingHorizontal: 20,
+    flex:1,
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    borderRadius: 4,
+
+  },
+
   container: {
-    backgroundColor: "#fff",
+    backgroundColor: "#000",
     flex: 1,
     paddingTop: Constants.statusBarHeight,
-    flexDirection: "row"
+    flexDirection: "row",
+    
   },
 
   addBtn: {  
@@ -366,15 +447,16 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     height: 50,
     width: 50,
-    backgroundColor: "#ff5757",
-    
+    marginHorizontal: 15,
+
   },
 
   addBtnText: {
     fontSize: 35,
     textAlign: "center",
     justifyContent: "center",
-    flex:1,
+    flex: 1,
+    color:"darkslategrey"
   },
 
   heading: {
@@ -414,7 +496,7 @@ const styles = StyleSheet.create({
 },
 
   input: {
-    borderColor: "#4630eb",
+    borderColor: "#000",
     borderRadius: 4,
     borderWidth: 1,
     marginVertical: 15,
@@ -433,13 +515,12 @@ const styles = StyleSheet.create({
   
   modalAdd: {
     paddingHorizontal: 20,
-    backgroundColor: "#ff5757",
     borderRadius:4,
   },
 
   listArea: {
     backgroundColor: "#f0f0f0",
-    flex: 1,
+    width: 70,
     paddingTop: 16,
   },
 
