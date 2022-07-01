@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Platform,
-  ScrollView,
+  
   StyleSheet,
   Text,
   TextInput,
