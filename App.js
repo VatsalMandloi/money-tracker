@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
 import {
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   Modal,
   Pressable,
+  FlatList,
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
-import { FlatList } from "react-native-web";
+import { setStatusBarNetworkActivityIndicatorVisible } from "expo-status-bar";
+
 
 function openDatabase() {
   if (Platform.OS === "web") {
@@ -31,54 +31,32 @@ function openDatabase() {
 
 const db = openDatabase();
 
-// function Items({accounts, onPressItem }) {
-//   const [items, setItems] = useState(accounts);
-
-//   useEffect(() => {
-//     db.transaction((tx) => {
-//       tx.executeSql(
-//         'select * from accounts;',
-//         (_, { rows: { _array } }) => setItems(_array)
-//       );
-//     });
-//   }, []);
-
-  
-
-//   if (items === null || items.length === 0) {
-//     return null;
-//   }
-
-//   return (
-//     <View style={styles.sectionContainer}>
-//       {items.map(({ id, name }) => (
-//         <TouchableOpacity
-//           key={id}
-//           onPress={() => onPressItem && onPressItem(id)}
-//           style={{
-//             backgroundColor:"#fff",
-//             borderColor: "#000",
-//             borderWidth: 1,
-//             padding: 8,
-//           }}
-//         >
-//           <Text>{name}</Text>
-//         </TouchableOpacity>
-//       ))}
-//     </View>
-//   );
-// }
-
 export default function App() {
   const [text, setText] = useState(null);
   const [id, setId] = useState(null);
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
   const [accounts, setaccounts] = useState(null);
+  const [acc, setacc] = useState([{ id: "1", name: "va" },
+  {
+    id: 4,
+    name: 'non esse culpa molestiae omnis sed optio'
+  },
+  {
+    id: 5,
+    name: 'eaque aut omnis a'
+  },
+  {
+    id: 6,
+    name: 'natus impedit quibusdam illo est'
+  },]);
+  const [transaction, setTransaction] = useState(null);
+  
   const [title, setTitle] = useState(null);
   const [tpay, setTpay] = useState(null);
   const [treceive, setTreceive] = useState(null);
   const [total, setTotal] = useState(null);
+  const [date, setDate] = useState(null);
   const [forceUpdate, forceUpdateId] = useForceUpdate();
   const [modalVisible, setmodalVisibal] = useState(false);
   const [tranModalVisible, setTranModalVisible] = useState(false);
@@ -90,45 +68,97 @@ export default function App() {
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists accounts (id integer primary key not null, name text, tpay real, treceive real, total real);"
+        "create table if not exists accounts (id integer primary key not null, name text, tpay real, treceive real);"
       );
       tx.executeSql(
-        "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)"
-      )
+        "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)",[], (tx, results) => {
+          console.log("table created")
+        }
+      );
+      tx.executeSql("select * from accounts", [], (tx, results) => {
+        setaccounts(results.rows._array) 
+      }
+      
+      );
     });
   }, []);
 
-  const add = (text) => {
+const add = (text) => {
     // is text empty?
     if (text === null || text === "") {
+     
       return false;
     }
     else {
-
-      db.transaction(
-        (tx) => {
-          tx.executeSql("insert into accounts (done, name, tpay, treceive,total) values (0, ?, 0, 0, 0)", [text]);
-          tx.executeSql("select * from accounts", [], (_, { rows }) =>
-            console.log(JSON.stringify(rows)),
-            setaccounts(rows)
-          );
+     
+     db.transaction((tx) => {
+      tx.executeSql(
+        "insert into accounts(name, tpay, treceive) values(?, 0, 0)", [text], (tx, results) => {
+          
+        }
+      );
+      tx.executeSql("select * from accounts", [], (tx, results) => {
+        setaccounts(results.rows._array)
+      }
+      
+      );
         },
         null,
-        forceUpdate
+        forceUpdate,
+        console.log("a")
       );
+        
+ 
       setmodalVisibal(!modalVisible)
     }
   };
 
-  const addTransaction = (desc, amount, side) => {
+  const addTransaction = (id, desc, amount, side) => {
+    var pay = 0
+    var p = parseFloat(tpay)
+    var r = parseFloat(treceive)
+    if (id === null) {
+     return false
+   }
+    if (desc === null || desc === "") {
+      desc = "place emoji here";
+    }
     if (amount === null || amount === "") {
       return false;
     }
     else {
+      if (side) {
+        pay = parseFloat(tpay) + parseFloat(amount)
+        p=pay
+        setTpay(pay)
+        db.transaction(
+          (tx) => {
+            tx.executeSql("update accounts set tpay = ?  where id = ?", [pay, id], (tx,  result )=> {
+              console.log("updatep"+id+pay)
+          });
+          }
+        )
+      } else {
+        pay = parseFloat(treceive) + parseFloat(amount)
+        r=pay
+        setTreceive(pay);
+        db.transaction(
+          (tx) => {
+            tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id], (tx,  result )=> {
+              console.log("updater"+id+pay)
+          });
+          }
+        )
+       
+      }
+console.log(r+p)
+      setTotal(r - p)
+      
       const date = new Date().getDate();
       db.transaction(
         (tx) => {
-          tx.executeSql("insert into transactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
+          tx.executeSql("insert into tansactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
+          
         }
       )
       setTranModalVisible(!tranModalVisible);
@@ -136,11 +166,36 @@ export default function App() {
   };
  
 
-  const updateMain = (id) => {
-    setId(id);
-    
+  const updateMain = (account) => {
+    setId(account.id)
+    setTitle(account.name)
+    setTpay(account.tpay)
+    setTreceive(account.treceive)
+    setTotal(account.treceive-account.tpay)
+    db.transaction(
+      (tx) => {
+        tx.executeSql("select * from transactions where accountid = ?", [account.id],
+          (_, { rows }) => {
+            console.log(rows)
+            setTransaction(rows);
+        })
+      }
+    )
+  
   }
 
+  const renderItem = ({ item }) => {
+ 
+    return (
+      <View>
+        <Pressable
+          onPress={() => { updateMain(item) }}>
+          <Text>{item.name}</Text>
+          </Pressable>
+    </View>
+    );
+    
+  };
 
   return (
     <View style={styles.container}>
@@ -206,9 +261,15 @@ export default function App() {
                 </View>
                 </View>
               </Modal>
+             
+                <FlatList
+                  data={accounts}
+                  renderItem={renderItem}
+                  keyExtractor={(item) => 
+                     item.id
+                  }
+                />
               
-        
-         
               
            {/* <ScrollView style={styles.listArea}>
             <Items
@@ -292,7 +353,7 @@ export default function App() {
                         </Pressable>
                         <Pressable
                           onPress={() => {
-                            addTransaction(desc, amount, side);
+                            addTransaction(id, desc, amount, side);
                             setAmount(null);
                             setDesc(null);}}
                         style={({ pressed }) => [{backgroundColor:pressed?"darkorange":"#ffbd59"},styles.modalBtn, styles.modalAdd]}
@@ -306,11 +367,11 @@ export default function App() {
                           
 
                           <View style={[styles.mainHeader, styles.flexColumn]}>
-                <Text style={styles.title}>Title:{title}</Text>
+                <Text style={styles.title}>{title} ⚰️</Text>
                             <View style={[styles.flexRow, styles.subpart]}>
-                  <Text style={[{ color: "#ff5757" }, styles.headersub]}>To pay:{tpay}</Text>
+                  <Text style={[{ color: "#ff5757" }, styles.headersub]}>- {tpay}</Text>
                   
-                  <Text style={[{ color: "#7ed975" }, styles.headersub]}>To receive: { treceive}</Text>
+                  <Text style={[{ color: "#7ed975" }, styles.headersub]}>+ { treceive}</Text>
                             </View>
                             </View>
                             
@@ -328,12 +389,24 @@ export default function App() {
                             
               <View style={[styles.mainBottom, styles.flexColumn]}>
                 
-                <Text style={{
+                <View style={styles.flexRow}>
+                  <Text style={{
                   fontSize: 18,
-                  paddingHorizontal: 5,
-                  margin: 5,
-                  color:"white",
-               }}>Net Total: {total} </Text>
+                paddingLeft:15,
+                   
+                  marginTop:5,
+                  color: "white",
+                }}>Net Total: </Text>
+                  
+                  <Text style={{
+                  fontSize: 26,
+                
+                  color: total===0?"white":total>0?"#7ed975":"#ff5757"
+                }}> {total} </Text>
+                </View>
+
+               
+            
                           <View style={styles.flexRow}>
 
                                 <Pressable
@@ -396,7 +469,7 @@ const styles = StyleSheet.create({
 },
 
   headersub: {
-    fontSize:16,
+    fontSize:19,
     margin: 5,
     padding: 5,
    
@@ -434,7 +507,7 @@ const styles = StyleSheet.create({
   },
 
   container: {
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
     flex: 1,
     paddingTop: Constants.statusBarHeight,
     flexDirection: "row",
