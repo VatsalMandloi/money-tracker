@@ -11,7 +11,6 @@ import {
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
 
-
 function openDatabase() {
   if (Platform.OS === "web") {
     return {
