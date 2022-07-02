@@ -367,7 +367,7 @@ console.log(r+p)
                           
 
                           <View style={[styles.mainHeader, styles.flexColumn]}>
-                <Text style={styles.title}>{title} ⚰️</Text>
+                <Text style={styles.title}>{title} </Text>
                             <View style={[styles.flexRow, styles.subpart]}>
                   <Text style={[{ color: "#ff5757" }, styles.headersub]}>- {tpay}</Text>
                   
