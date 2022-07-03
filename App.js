@@ -7,9 +7,14 @@ import {
   View,
   Modal,
   Pressable,
+  FlatList,
+  Alert,
+  StatusBar,
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
+
+
 
 function openDatabase() {
   if (Platform.OS === "web") {
@@ -27,115 +32,220 @@ function openDatabase() {
 }
 
 const db = openDatabase();
-function Items({ done: doneHeading, onPressItem }) {
-  const [items, setItems] = useState(null);
-
-  useEffect(() => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        `select * from accounts where done = ?;`,
-        [doneHeading ? 1 : 0],
-        (_, { rows: { _array } }) => setItems(_array)
-      );
-    });
-  }, []);
-
-  const heading = doneHeading ? "Completed" : "Todo";
-
-  if (items === null || items.length === 0) {
-    return null;
-  }
-
-  return (
-    <View style={styles.sectionContainer}>
-      <Text style={styles.sectionHeading}>{heading}</Text>
-      {items.map(({ id, done, name }) => (
-        <TouchableOpacity
-          key={id}
-          onPress={() => onPressItem && onPressItem(id)}
-          style={{
-            backgroundColor: done ? "#1c9963" : "#fff",
-            borderColor: "#000",
-            borderWidth: 1,
-            padding: 8,
-          }}
-        >
-          <Text style={{ color: done ? "#fff" : "#000" }}>{name}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-}
 
 export default function App() {
   const [text, setText] = useState(null);
   const [id, setId] = useState(null);
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
-  const [title, setTitle] = useState(null);
+  const [accounts, setaccounts] = useState(null);
+  const [transactions, setTransactions] = useState(null);
+  const [title, setTitle] = useState("👻");
   const [tpay, setTpay] = useState(null);
   const [treceive, setTreceive] = useState(null);
   const [total, setTotal] = useState(null);
-  const [forceUpdate, forceUpdateId] = useForceUpdate();
+  const [date, setDate] = useState(null);
   const [modalVisible, setmodalVisibal] = useState(false);
   const [tranModalVisible, setTranModalVisible] = useState(false);
   const [side, setSide] = useState(null);
+  const [selectedID, setSelID] = useState(null);
   const pay = 1;
   const receive = 0;
-
+  
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
-        "create table if not exists accounts (id integer primary key not null,done int, name text, tpay real, treceive real, total real);"
+        "create table if not exists accounts (id integer primary key not null, name text, tpay real, treceive real);"
       );
       tx.executeSql(
-      "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)"
-      )
+        "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)",[], (tx, results) => {
+          console.log("table created")
+        }
+      );
+      tx.executeSql("select * from accounts", [], (tx, results) => {
+        setaccounts(results.rows._array) 
+      }
+      
+      );
     });
   }, []);
 
-  const add = (text) => {
+const add = (text) => {
     // is text empty?
     if (text === null || text === "") {
+     
       return false;
     }
     else {
-
-      db.transaction(
-        (tx) => {
-          tx.executeSql("insert into accounts (done, name, tpay, treceive,total) values (0, ?, 0, 0, 0)", [text]);
-          tx.executeSql("select * from accounts", [], (_, { rows }) =>
-            console.log(JSON.stringify(rows))
-          );
-        },
-        null,
-        forceUpdate
+     
+     db.transaction((tx) => {
+      tx.executeSql(
+        "insert into accounts(name, tpay, treceive) values(?, 0, 0)", [text]);
+      tx.executeSql("select * from accounts", [], (tx, results) => {
+        setaccounts(results.rows._array)
+      }
+      
       );
-    setmodalVisibal(!modalVisible)}
+        },
+        
+        
+      );
+        
+ 
+      setmodalVisibal(!modalVisible)
+    }
   };
 
-  const addTransaction = (desc, amount, side) => {
+  const addTransaction = (id, desc, amount, side) => {
+    var pay = 0
+    var p = parseFloat(tpay)
+    var r = parseFloat(treceive)
+    if (id === null) {
+     return false
+   }
+    if (desc === null || desc === "") {
+      desc = "place emoji here";
+    }
     if (amount === null || amount === "") {
       return false;
     }
     else {
+      if (side) {
+        pay = parseFloat(tpay) + parseFloat(amount)
+        p=pay
+        setTpay(pay)
+        db.transaction(
+          (tx) => {
+            tx.executeSql("update accounts set tpay = ?  where id = ?", [pay, id]);
+          }
+        )
+      } else {
+        pay = parseFloat(treceive) + parseFloat(amount)
+        r=pay
+        setTreceive(pay);
+        db.transaction(
+          (tx) => {
+            tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id]);
+          }
+        )
+       
+      }
+
+      setTotal(r - p)
+      
       const date = new Date().getDate();
       db.transaction(
         (tx) => {
-          tx.executeSql("insert into transactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
+          tx.executeSql("insert into tansactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
+         
+          
+          dbTran(id)
         }
       )
       setTranModalVisible(!tranModalVisible);
     }
   };
 
-  const updateMain = (id) => {
-    setId(id);
-    
+  const updateMain = (account) => {
+    setId(account.id)
+    setTitle(account.name)
+    setTpay(account.tpay)
+    setTreceive(account.treceive)
+    setTotal(account.treceive-account.tpay)
+    dbTran(account.id)
+    setSelID(account.id)
   }
-  return (
-    <View style={styles.container}>
 
+
+  const dbTran = (id) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql("select * from tansactions where accountid = ?", [id],
+          (tx,results ) => {
+            
+            setTransactions(results.rows._array);
+        })
+      }
+    )
+}
+
+  const renderItem = ({ item }) => {
+    return (
+      <View>
+        <Pressable
+          onPress={() => { updateMain(item) }}
+        
+          style={ [styles.avatar,{borderColor:(item.id===selectedID)?"#FF8157":"#0000",borderWidth:1}]}>
+          <Text style={styles.avatarTitle}>{item.name}</Text>
+          </Pressable>
+    </View>
+    );
+  };
+
+  const chat = ({ item }) => {
+    return (
+      <View style={[ item.side?styles.pchat: styles.rchat, styles.chatCard, styles.flexRow ]}>
+        <View style={styles.flexColumn}>
+        <Text style={styles.chatdesc}>{item.desc}</Text>
+        <Text style={styles.chatdesc}>{ item.date}</Text>
+       </View> 
+        <Text style={styles.chatam}>{ item.amount}</Text>
+
+                </View>
+    );
+  };
+
+  const initialState = () => {
+    setId(null)
+    setTitle("👻")
+    setTotal(null)
+    setTpay(null)
+    setTreceive(null)
+    setTransactions(null)
+  }
+const  delAccount=(id)=>{
+  
+  db.transaction(
+    (tx) => {
+      tx.executeSql(`delete from accounts where id = ?;`, [id]);
+      tx.executeSql(`delete from tansactions where accountid = ?;`, [id]);
+      tx.executeSql("select * from accounts;", [], (tx, results) => {
+        setaccounts(results.rows._array),
+        initialState();
+      }
+      
+      );
+      console.log("a")
+    },
+
+  );
+
+}
+  const delAlert = (id,title) =>
+    Alert.alert(
+      "We miss you " + title+"!! 😭",
+      "All transactions will be deleted!!",
+      [
+        {
+          text: "cancel",
+          style: "cancel"
+        },
+        {
+          text: "Let it go!!",
+          onPress: () => {
+           delAccount(id)
+          }
+        },
+        
+      ]
+    )
+  
+
+
+  return (
+    
+    <View style={styles.container}>
+     
       {Platform.OS === "web" ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
@@ -146,20 +256,21 @@ export default function App() {
         </View>
       ) : (
           <>
-            <View  style={styles.flexColumn}> 
+            <View style={[styles.flexColumn, styles.sidenav]}> 
+            
             <Modal
-
-          visible={modalVisible}
-          animationType="slide"
-          onRequestClose={() => {
-            setmodalVisibal(!modalVisible);
+                transparent={true}
+                visible={modalVisible}
+                animationType="slide"
+                onRequestClose={() => {
+                  setmodalVisibal(!modalVisible);
           }} 
-          transparent={true}
+         
           >
 
         <View style={[styles.centreModal, styles.flexColumn]}>
                 <View style={styles.modal}>  
-            <Text>Add Account</Text>
+            <Text style={styles.modaltitle}>Add Account</Text>
             <TextInput
                       onChangeText={(text) => setText(text)
                       }
@@ -167,7 +278,7 @@ export default function App() {
                 add(text);
                 setText(null);
               }}
-              placeholder="Enter name to recognize"
+              placeholder="Enter name to recognize!!"
                       style={styles.input}
                     
               value={text}
@@ -179,67 +290,46 @@ export default function App() {
                         setText(null);
                         }}
                       style={[styles.modalBtn, styles.modalClose]}>
-                      <Text>Close</Text>
+                        {({ pressed }) => (<Text style={{
+                          color: pressed ? "#FF8157" : "darkgrey",
+                          fontSize: 16,
+                          marginRight:25, }}>Close</Text>)}
                       </Pressable>
                       
                     <Pressable
                         onPress={() => {
                           add(text);
                           setText(null);}}
-                        style={[styles.modalBtn, styles.modalAdd]}
+                        style={({ pressed }) => [{backgroundColor:pressed?"#CF8066":"#FF8157"},styles.modalBtn, styles.modalAdd]}
                       >
-                <Text>Add</Text>
+                <Text style={{color:"#EDEDEE"}}>Add 🤗</Text>
               </Pressable>
                   </View>
                 </View>
                 </View>
               </Modal>
+             
+                <FlatList
+                  data={accounts}
+                  renderItem={renderItem}
+                  keyExtractor={(item) => 
+                     item.id
+                  }
+                />
               
-          <ScrollView style={styles.listArea}>
-            <Items
-              key={`forceupdate-todo-${forceUpdateId}`}
-              done={false}
-              onPressItem={(id) =>
-                db.transaction(
-                  (tx) => {
-                    tx.executeSql(`update accounts set done = 1 where id = ?;`, [
-                      id,
-                    ]);
-                  },
-                  null,
-                  forceUpdate
-                )
-              }
-            />
-            <Items
-              done
-              key={`forceupdate-done-${forceUpdateId}`}
-              onPressItem={(id) =>
-                db.transaction(
-                  (tx) => {
-                    tx.executeSql(`delete from accounts where id = ?;`, [id]);
-                  },
-                  null,
-                  forceUpdate,
-                  updateMain(id),
-                )
-              }
-            />
-              </ScrollView>
+              
               <Pressable
           onPress={() => {
             setmodalVisibal(!modalVisible);
                 }}
-              style={styles.addBtn}>
-          <Text style={styles.addBtnText}> + </Text>
+              style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn]}>
+                {({ pressed }) =>(<Text style={[styles.addBtnText,
+                { color: pressed?"#101820FF":"#FF8157" }]}> + </Text>)}
         </Pressable>
-            </View>
             
+            </View>
 
-            {id === null ? (<View>
-              <Text>CHoose an account to continue</Text>
-           </View>):( <View>
-              
+           <View style={[styles.main, styles.flexColumn]}> 
             <Modal
 
               visible={tranModalVisible}
@@ -252,7 +342,7 @@ export default function App() {
 
                 <View style={[styles.centreModal, styles.flexColumn]}>
                 <View style={styles.modal}>  
-                      <Text>Add {side?"Payment":"Receiving" } Details</Text>
+                      <Text style={styles.modaltitle}>Add {side?"Payment":"Receiving" } Details</Text>
                   <View style={styles.flexColumn}>
                   <TextInput
                   onChangeText={(desc) => setDesc(desc)}
@@ -272,7 +362,8 @@ export default function App() {
                   }}
                   placeholder="Enter Amount"
                   style={styles.input}
-                  value={amount}
+                        value={amount}
+                    keyboardType={"numeric"}
                       />
                     </View>
                       <View style={styles.flexRow}>
@@ -282,17 +373,20 @@ export default function App() {
                             setAmount(null);
                             setDesc(null);
                           }}
-                          style={[styles.modalBtn, styles.modalClose]}>
-                          <Text>Close</Text>
+                        style={ [styles.modalBtn, styles.modalClose]}>
+                         {({ pressed }) => (<Text style={{
+                         color: pressed ? "#FF8157" : "darkgrey",
+                          fontSize: 16,
+                          marginRight:25, }}>Close</Text>)}
                         </Pressable>
                         <Pressable
                           onPress={() => {
-                            addTransaction(desc, amount, side);
+                            addTransaction(id, desc, amount, side);
                             setAmount(null);
                             setDesc(null);}}
-                          style={[styles.modalBtn, styles.modalAdd]}
+                        style={({ pressed }) => [{backgroundColor:pressed?"#CF8066":"#FF8157"},styles.modalBtn, styles.modalAdd]}
                         >
-                    <Text>Add</Text>
+                    <Text style={{color:"#EDEDEE"}}>Add 💸</Text>
                   </Pressable>
                       </View>
                     </View>
@@ -300,42 +394,98 @@ export default function App() {
                             </Modal>
                           
 
-                          <View>
-                            <Text>Title</Text>
-                            <View style={styles.flexRow}>
-                              <Text>Tpay</Text>
-                              <Text>Treceive</Text>
+                          <View style={[styles.mainHeader, styles.flexColumn]}>
+                <View style={[styles.flexRow]}>
+                  <View style={{flex:3,alignItems:"center"}}>
+                  <Text style={[styles.title]}>{title}
+                  </Text>
+                  </View>
+                 
+                  
+                  <View style={{ justifyContent: "flex-end", flex: 1 }}
+                 >
+                    <Pressable
+                      onPress={() => {
+                        delAlert(id,title)
+                      }}
+                       disabled={id === null?true:false}
+                      style={({pressed})=>[styles.delBtn,{backgroundColor:pressed?"#ff5757":"#0000"}]}>
+                      {({ pressed })=>( <Text style={[{ color:pressed?"white":"#ff5757" }]}>Delete</Text>)}
+                     
+                    </Pressable>
+                  </View>
+                
+                </View> 
+
+                            <View style={[styles.flexRow, styles.subpart]}>
+                  <Text style={[{ color: "#ff5757" }, styles.headersub]}>- {tpay}</Text>
+                  
+                  <Text style={[{ color: "#7ed975" }, styles.headersub]}>+ { treceive}</Text>
                             </View>
                             </View>
                             
-                          <View>
-                            <Text>CHat area</Text>
+                          <View style={[styles.chat, styles.flexColumn]}>
+               
+                <FlatList
+                  data={transactions}
+                  renderItem={chat}
+                  keyExtractor={(item)=>item.id}
+                        />
+              
+
                             </View>
                             
-                          <View>
-                            <Text>Total: </Text>
+              <View style={[styles.mainBottom, styles.flexColumn]}>
+                
+                <View style={[styles.flexRow,{ marginTop:5}]}>
+                  <Text style={{
+                  fontSize: 16,
+                paddingLeft:15,
+             marginTop:2,
+                  color: "#B9B9BA",
+                }}>Net Total: </Text>
+                  
+                  <Text style={{
+                  fontSize: 19,
+                
+                  color: total===0?"#CACBCB":total>0?"#41BF5B":"#ff5757"
+                }}> {total} </Text>
+                </View>
+
                           <View style={styles.flexRow}>
 
-                                <Pressable
+                  <Pressable
+                    disabled={id === null?true:false}
                                 onPress={() => {
                                     setTranModalVisible(!tranModalVisible);    
                                     setSide(pay);        
-                          }}>
-                              <Text>Pay</Text>
+                    }}
+                    style={({ pressed })=>[{
+                      backgroundColor: pressed ? "#ff5757" : "#0000",
+                      borderColor: "#ff5757",
+                      borderWidth:1,
+                    }, styles.Btn]}>
+                    {({ pressed })=>(<Text style={{ color:pressed?"white":"#ff5757"}}>Pay</Text>)}
                                 </Pressable>
                                 
-                                <Pressable
+                  <Pressable
+                    disabled={id === null?true:false}
                                 onPress={() => {
                                   setTranModalVisible(!tranModalVisible);    
                                     setSide(receive); 
-                          }}>
-                              <Text>Receive</Text>
+                    }}
+                    style={({ pressed })=>[{
+                      backgroundColor: pressed ? "#41BF5B" : "#0000",
+                      borderColor: "#41BF5B",
+                      borderWidth:1,
+                   }, styles.Btn]}>
+                             {({ pressed })=>(<Text style={{ color:pressed?"white":"#41BF5B"}}>Receive</Text>)}
                           </Pressable>
                             </View>
                             </View>
 
 
-              </View>)}
+              </View>
         </>
       )}
 
@@ -343,34 +493,154 @@ export default function App() {
   );
 }
 
-function useForceUpdate() {
-  const [value, setValue] = useState(0);
-  return [() => setValue(value + 1), value];
-}
-
 const styles = StyleSheet.create({
+  main: {
+    flex:1,
+  },
+  sidenav: {
+    backgroundColor: "#101820FF",
+    alignItems: "center",
+    paddingTop:25,
+  },
+  avatar: {
+    backgroundColor:"#2A3036",
+    width: 50,
+    height:50,
+    padding: 5,
+    margin: 8,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent:"center",
+  },
+
+  avatarTitle: {
+    color: "#CACBCB",
+    fontSize:14,
+  },
+
+  mainHeader: {
+    flex: 1,
+    backgroundColor: "#1E252C",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    
+  },
+  
+  title: {
+    fontSize: 22,
+    color:"#CACBCB",
+    justifyContent:"space-evenly"
+},
+
+  delBtn:{
+      borderColor: "#ff5757",
+      borderWidth: 1,
+      borderRadius: 4,
+        padding: 4,
+      marginRight:4,
+      alignItems: "center",  
+  },
+  
+  headersub: {
+    fontSize:19,
+    margin: 5,
+    padding: 5,
+   
+  },
+
+  subpart: {
+    justifyContent: "center",
+    alignItems:"center"
+},
+
+  chat: {
+    flex: 4,
+    backgroundColor:"#2A3036"
+  },
+
+  pchat:{
+    alignSelf:"flex-start"
+    
+  },
+  
+  rchat: {
+    alignSelf:"flex-end"
+  },
+  chatCard: {
+    backgroundColor: "#363C41",
+    margin: 4,
+    padding: 6,
+    borderRadius: 15,
+    justifyContent: "space-between",
+    maxWidth: 210,
+    
+  },
+  chatdesc:{
+    fontSize: 14,
+    color: "#CACBCB",
+    marginHorizontal: 5,
+    paddingHorizontal: 5,
+    flexWrap: "wrap",
+    maxWidth:120,
+  },
+  chatam: {
+    fontSize: 18,
+    color: "#CACBCB",
+    alignSelf: "center",
+    marginHorizontal: 5,
+    paddingHorizontal: 5,
+    paddingLeft:15,
+    borderLeftWidth: 1,
+    borderLeftColor:"grey"
+  },
+  mainBottom: {
+    flex:1,
+    backgroundColor: "#1E252C",
+    justifyContent: "space-evenly",
+  },
+
+  Btn: {
+    padding: 10,
+    margin: 10,
+    paddingHorizontal: 20,
+    flex:1,
+    
+    alignItems: "center",
+    borderRadius: 4,
+  },
+
+  modaltitle: {
+  color:"#DCDCDC"
+  },
+  
   container: {
     backgroundColor: "#fff",
     flex: 1,
     paddingTop: Constants.statusBarHeight,
-    flexDirection: "row"
+    flexDirection: "row",
+    
   },
 
   addBtn: {  
     justifyContent: "center",
-    textAlign: "center",
+    alignItems: "center",
+    alignSelf:"flex-end",
     borderRadius: 50,
     height: 50,
     width: 50,
-    backgroundColor: "#ff5757",
-    
+    margin: 15,
+    borderColor: "#FF8157",
+    borderWidth: 1,
+    marginBottom: 28,
+   
+    paddingBottom:10,
   },
 
   addBtnText: {
     fontSize: 35,
-    textAlign: "center",
-    justifyContent: "center",
-    flex:1,
+  fontWeight:"200",
+    color: "darkslategrey",
+    
   },
 
   heading: {
@@ -395,9 +665,11 @@ const styles = StyleSheet.create({
 
   modal: {
     margin: 40,
-    backgroundColor: "white",
+    backgroundColor: "#5B5E60",
     borderRadius: 20,
     padding: 30,
+    borderColor: "#DCDCDC",
+    borderWidth:1,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -410,7 +682,8 @@ const styles = StyleSheet.create({
 },
 
   input: {
-    borderColor: "#4630eb",
+    backgroundColor:"#DCDCDC",
+    borderColor: "white",
     borderRadius: 4,
     borderWidth: 1,
     marginVertical: 15,
@@ -429,23 +702,8 @@ const styles = StyleSheet.create({
   
   modalAdd: {
     paddingHorizontal: 20,
-    backgroundColor: "#ff5757",
     borderRadius:4,
   },
 
-  listArea: {
-    backgroundColor: "#f0f0f0",
-    flex: 1,
-    paddingTop: 16,
-  },
-
-  sectionContainer: {
-    marginBottom: 16,
-    marginHorizontal: 16,
-  },
-
-  sectionHeading: {
-    fontSize: 18,
-    marginBottom: 8,
-  },
 });
+
