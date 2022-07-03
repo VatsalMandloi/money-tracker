@@ -8,6 +8,7 @@ import {
   Modal,
   Pressable,
   FlatList,
+  Alert,
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
@@ -52,7 +53,7 @@ export default function App() {
   },]);
   const [transaction, setTransaction] = useState(null);
   
-  const [title, setTitle] = useState(null);
+  const [title, setTitle] = useState("👻");
   const [tpay, setTpay] = useState(null);
   const [treceive, setTreceive] = useState(null);
   const [total, setTotal] = useState(null);
@@ -64,14 +65,14 @@ export default function App() {
   const [color, setColor] = useState(null);
   const pay = 1;
   const receive = 0;
-
+  
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
         "create table if not exists accounts (id integer primary key not null, name text, tpay real, treceive real);"
       );
       tx.executeSql(
-        "create table if not exists tansactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)",[], (tx, results) => {
+        "create table if not exists transactions(id integer primary key not null, accountid integer, desc text, date date, amount real, side int)",[], (tx, results) => {
           console.log("table created")
         }
       );
@@ -105,7 +106,6 @@ const add = (text) => {
         },
         null,
         forceUpdate,
-        console.log("a")
       );
         
  
@@ -157,7 +157,7 @@ console.log(r+p)
       const date = new Date().getDate();
       db.transaction(
         (tx) => {
-          tx.executeSql("insert into tansactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
+          tx.executeSql("insert into transactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
           
         }
       )
@@ -197,6 +197,51 @@ console.log(r+p)
     
   };
 
+  const initialState = () => {
+    setId(null)
+    setTitle("👻")
+    setTotal(null)
+    setTpay(null)
+    setTreceive(null)
+  }
+const  delAccount=(id)=>{
+  
+  db.transaction(
+    (tx) => {
+      tx.executeSql(`delete from accounts where id = ?;`, [id]);
+      tx.executeSql(`delete from transactions where accountid = ?;`, [id]);
+      tx.executeSql("select * from accounts;", [], (tx, results) => {
+        setaccounts(results.rows._array),
+        initialState();
+      }
+      
+      );
+      console.log("a")
+    },
+
+  );
+
+}
+  const delAlert = (id,title) =>
+    Alert.alert(
+      "We miss you " + title+"!! 😭",
+      "All transactions will be deleted!!",
+      [
+        {
+          text: "cancel",
+          style: "cancel"
+        },
+        {
+          text: "Let it go!!",
+          onPress: () => {
+           delAccount(id)
+          }
+        },
+        
+      ]
+    )
+  
+
   return (
     <View style={styles.container}>
 
@@ -231,7 +276,7 @@ console.log(r+p)
                 add(text);
                 setText(null);
               }}
-              placeholder="Enter name to recognize"
+              placeholder="Enter name to recognize!!"
                       style={styles.input}
                     
               value={text}
@@ -269,27 +314,7 @@ console.log(r+p)
                      item.id
                   }
                 />
-              
-              
-           {/* <ScrollView style={styles.listArea}>
-            <Items
-              key={`forceupdate-todo-${forceUpdateId}`}
-             
-              onPressItem={(id) =>
-                db.transaction(
-                  (tx) => {
-                    tx.executeSql(`select * from transaction where id = ?;`, [
-                      id,
-                    ]);
-                  },
-                  null,
-                  forceUpdate
-                )
-              }
-            />
-          
-              </ScrollView>  */}
-            
+
               <Pressable
           onPress={() => {
             setmodalVisibal(!modalVisible);
@@ -367,7 +392,28 @@ console.log(r+p)
                           
 
                           <View style={[styles.mainHeader, styles.flexColumn]}>
-                <Text style={styles.title}>{title} </Text>
+                <View style={[styles.flexRow]}>
+                  <View style={{flex:3,alignItems:"center"}}>
+                  <Text style={[styles.title]}>{title}
+                  </Text>
+                  </View>
+                 
+                  
+                  <View style={{ justifyContent: "flex-end", flex: 1 }}
+                 >
+                    <Pressable
+                      onPress={() => {
+                        delAlert(id,title)
+                      }}
+                       disabled={id === null?true:false}
+                      style={({pressed})=>[styles.delBtn,{backgroundColor:pressed?"#ff5757":"#0000"}]}>
+                      {({ pressed })=>( <Text style={[{ color:pressed?"white":"#ff5757",fontWeight:"bold" }]}>Delete</Text>)}
+                     
+                    </Pressable>
+                  </View>
+                
+                </View> 
+
                             <View style={[styles.flexRow, styles.subpart]}>
                   <Text style={[{ color: "#ff5757" }, styles.headersub]}>- {tpay}</Text>
                   
@@ -409,7 +455,8 @@ console.log(r+p)
             
                           <View style={styles.flexRow}>
 
-                                <Pressable
+                  <Pressable
+                    disabled={id === null?true:false}
                                 onPress={() => {
                                     setTranModalVisible(!tranModalVisible);    
                                     setSide(pay);        
@@ -420,7 +467,8 @@ console.log(r+p)
                               <Text style={{ color:"white"}}>📤 Pay</Text>
                                 </Pressable>
                                 
-                                <Pressable
+                  <Pressable
+                    disabled={id === null?true:false}
                                 onPress={() => {
                                   setTranModalVisible(!tranModalVisible);    
                                     setSide(receive); 
@@ -462,12 +510,25 @@ const styles = StyleSheet.create({
     
   },
 
+  titleSection:{
+ 
+},
+  
   title: {
     fontSize: 22,
     color:"white",
     justifyContent:"space-evenly"
 },
 
+  delBtn:{
+      borderColor: "#ff5757",
+      borderWidth: 2,
+      borderRadius: 4,
+        padding: 4,
+      marginRight:4,
+      alignItems: "center",  
+  },
+  
   headersub: {
     fontSize:19,
     margin: 5,
@@ -488,11 +549,8 @@ const styles = StyleSheet.create({
 
   mainBottom: {
     flex:1,
- 
     backgroundColor: "#545454",
     justifyContent: "space-evenly",
- 
-    
   },
 
   Btn: {
@@ -500,10 +558,9 @@ const styles = StyleSheet.create({
     margin: 10,
     paddingHorizontal: 20,
     flex:1,
-    justifyContent: "space-evenly",
+
     alignItems: "center",
     borderRadius: 4,
-
   },
 
   container: {
