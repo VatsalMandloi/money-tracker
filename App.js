@@ -156,6 +156,7 @@ const add = (text) => {
     setSelID(account.id)
   }
 
+
   const dbTran = (id) => {
     db.transaction(
       (tx) => {
@@ -239,6 +240,7 @@ const  delAccount=(id)=>{
       ]
     )
   
+
 
   return (
     
@@ -704,3 +706,4 @@ const styles = StyleSheet.create({
   },
 
 });
+
