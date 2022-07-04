@@ -39,19 +39,22 @@ export default function App() {
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
   const [accounts, setaccounts] = useState(null);
+  const [account, setaccount] = useState(null);
   const [transactions, setTransactions] = useState(null);
   const [title, setTitle] = useState("👻");
-  const [tpay, setTpay] = useState(null);
-  const [treceive, setTreceive] = useState(null);
-  const [total, setTotal] = useState(null);
+  const [tpay, setTpay] = useState("0.0");
+  const [treceive, setTreceive] = useState("0.0");
+  const [total, setTotal] = useState("👌");
   const [date, setDate] = useState(null);
   const [modalVisible, setmodalVisibal] = useState(false);
   const [tranModalVisible, setTranModalVisible] = useState(false);
   const [side, setSide] = useState(null);
   const [selectedID, setSelID] = useState(null);
+  const [delID, setDelId] = useState(null);
   const pay = 1;
   const receive = 0;
-  
+  const month = ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
@@ -80,38 +83,34 @@ const add = (text) => {
      
      db.transaction((tx) => {
       tx.executeSql(
-        "insert into accounts(name, tpay, treceive) values(?, 0, 0)", [text]);
+        "insert into accounts(name, tpay, treceive) values(?, 0.0, 0.0)", [text]);
       tx.executeSql("select * from accounts", [], (tx, results) => {
         setaccounts(results.rows._array)
       }
-      
       );
         },
-        
-        
       );
-        
- 
       setmodalVisibal(!modalVisible)
     }
   };
 
   const addTransaction = (id, desc, amount, side) => {
-    var pay = 0
-    var p = parseFloat(tpay)
-    var r = parseFloat(treceive)
+
     if (id === null) {
      return false
    }
     if (desc === null || desc === "") {
-      desc = "place emoji here";
+      desc = "🤑🚀🧠✨";
     }
     if (amount === null || amount === "") {
       return false;
     }
     else {
+      var p = parseFloat(tpay)
+      var r = parseFloat(treceive)
+      var pay = 0;
       if (side) {
-        pay = parseFloat(tpay) + parseFloat(amount)
+       pay= parseFloat(tpay) + parseFloat(amount)
         p=pay
         setTpay(pay)
         db.transaction(
@@ -119,26 +118,28 @@ const add = (text) => {
             tx.executeSql("update accounts set tpay = ?  where id = ?", [pay, id]);
           }
         )
+        updateAcc(id)
       } else {
         pay = parseFloat(treceive) + parseFloat(amount)
         r=pay
         setTreceive(pay);
         db.transaction(
           (tx) => {
-            tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id]);
+            tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id],);
           }
         )
-       
+        updateAcc(id)
       }
-
+  
       setTotal(r - p)
       
-      const date = new Date().getDate();
+      const today = new Date();
+      const date = today.getDate()+" "+month[today.getMonth()]
+      console.log(date)
       db.transaction(
         (tx) => {
           tx.executeSql("insert into tansactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
-         
-          
+
           dbTran(id)
         }
       )
@@ -146,6 +147,43 @@ const add = (text) => {
     }
   };
 
+  const amountUpdate = (id,side,amount) => {
+    var p = parseFloat(tpay)
+    var r = parseFloat(treceive)
+    var pay = 0;
+    if (side) {
+     pay= parseFloat(tpay) - parseFloat(amount)
+      p=pay
+      setTpay(pay)
+      db.transaction(
+        (tx) => {
+          tx.executeSql("update accounts set tpay = ?  where id = ?", [pay, id]);
+        }
+      )
+    } else {
+      pay = parseFloat(treceive) - parseFloat(amount)
+      r=pay
+      setTreceive(pay);
+      db.transaction(
+        (tx) => {
+          tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id],);
+        }
+      )
+     
+    }
+    updateAcc(id)
+    setTotal(r - p)
+
+}
+  const updateAcc = (id) => {
+    db.transaction((tx) => {
+      tx.executeSql("select * from accounts", [], (tx, results) => {
+        setaccounts(results.rows._array)
+      }
+    
+      );
+    });
+}
   const updateMain = (account) => {
     setId(account.id)
     setTitle(account.name)
@@ -155,7 +193,6 @@ const add = (text) => {
     dbTran(account.id)
     setSelID(account.id)
   }
-
 
   const dbTran = (id) => {
     db.transaction(
@@ -173,7 +210,10 @@ const add = (text) => {
     return (
       <View>
         <Pressable
-          onPress={() => { updateMain(item) }}
+          onPress={() => {
+            
+            updateMain(item)
+          }}
         
           style={ [styles.avatar,{borderColor:(item.id===selectedID)?"#FF8157":"#0000",borderWidth:1}]}>
           <Text style={styles.avatarTitle}>{item.name}</Text>
@@ -184,13 +224,23 @@ const add = (text) => {
 
   const chat = ({ item }) => {
     return (
-      <View style={[ item.side?styles.pchat: styles.rchat, styles.chatCard, styles.flexRow ]}>
+      <View >
+        <Pressable
+          onLongPress={
+            ()=>{delTran(item.id,item.accountid,item.side,item.amount)}
+        }
+          style={({ pressed }) => [{ backgroundColor: pressed ? "#867979" : "#0000" }]}> 
+       
+          <View style={ [item.side?styles.pchat: styles.rchat, styles.chatCard, styles.flexRow ]}>
         <View style={styles.flexColumn}>
-        <Text style={styles.chatdesc}>{item.desc}</Text>
-        <Text style={styles.chatdesc}>{ item.date}</Text>
+              <Text style={[ styles.chatdesc, {fontSize:10, color:"grey"}]}>{ item.date}</Text>
+              <Text style={styles.chatdesc}>{item.desc}</Text>
+      
        </View> 
-        <Text style={styles.chatam}>{ item.amount}</Text>
-
+            <Text style={styles.chatam}>{item.amount}</Text>
+            </View>
+            
+        </Pressable>
                 </View>
     );
   };
@@ -198,11 +248,22 @@ const add = (text) => {
   const initialState = () => {
     setId(null)
     setTitle("👻")
-    setTotal(null)
-    setTpay(null)
-    setTreceive(null)
+    setTotal("👌")
+    setTpay("0.0")
+    setTreceive("0.0")
     setTransactions(null)
   }
+
+  const delTran = (id,accountid,side,amount) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(`delete from tansactions where id = ?;`, [id]);
+    }
+    )
+    dbTran(accountid)
+    amountUpdate(accountid,side,amount)
+}
+
 const  delAccount=(id)=>{
   
   db.transaction(
@@ -240,7 +301,6 @@ const  delAccount=(id)=>{
       ]
     )
   
-
 
   return (
     
@@ -295,7 +355,7 @@ const  delAccount=(id)=>{
                           fontSize: 16,
                           marginRight:25, }}>Close</Text>)}
                       </Pressable>
-                      
+             
                     <Pressable
                         onPress={() => {
                           add(text);
@@ -323,8 +383,8 @@ const  delAccount=(id)=>{
             setmodalVisibal(!modalVisible);
                 }}
               style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn]}>
-                {({ pressed }) =>(<Text style={[styles.addBtnText,
-                { color: pressed?"#101820FF":"#FF8157" }]}> + </Text>)}
+                {({ pressed }) =>(<Text style={[
+                { color: pressed?"#101820FF":"#FF8157" },styles.addBtnText]}> + </Text>)}
         </Pressable>
             
             </View>
@@ -357,8 +417,9 @@ const  delAccount=(id)=>{
                 <TextInput
                   onChangeText={(amount) => setAmount(amount)}
                   onSubmitEditing={() => {
-                  
+                    addTransaction(id, desc, amount, side);
                     setAmount(null);
+                    setDesc(null);
                   }}
                   placeholder="Enter Amount"
                   style={styles.input}
@@ -410,7 +471,7 @@ const  delAccount=(id)=>{
                       }}
                        disabled={id === null?true:false}
                       style={({pressed})=>[styles.delBtn,{backgroundColor:pressed?"#ff5757":"#0000"}]}>
-                      {({ pressed })=>( <Text style={[{ color:pressed?"white":"#ff5757" }]}>Delete</Text>)}
+                      {({ pressed })=>( <Text style={[{ color:pressed?"white":"#ff5757",fontSize:12 }]}>Delete</Text>)}
                      
                     </Pressable>
                   </View>
@@ -439,14 +500,14 @@ const  delAccount=(id)=>{
                 
                 <View style={[styles.flexRow,{ marginTop:5}]}>
                   <Text style={{
-                  fontSize: 16,
+                  fontSize: 14,
                 paddingLeft:15,
              marginTop:2,
                   color: "#B9B9BA",
                 }}>Net Total: </Text>
                   
                   <Text style={{
-                  fontSize: 19,
+                  fontSize: 16,
                 
                   color: total===0?"#CACBCB":total>0?"#41BF5B":"#ff5757"
                 }}> {total} </Text>
@@ -521,13 +582,13 @@ const styles = StyleSheet.create({
   mainHeader: {
     flex: 1,
     backgroundColor: "#1E252C",
-    justifyContent: "space-evenly",
-    alignItems: "center",
+    justifyContent:"space-evenly"
+  
     
   },
   
   title: {
-    fontSize: 22,
+    fontSize: 18,
     color:"#CACBCB",
     justifyContent:"space-evenly"
 },
@@ -542,7 +603,7 @@ const styles = StyleSheet.create({
   },
   
   headersub: {
-    fontSize:19,
+    fontSize:16,
     margin: 5,
     padding: 5,
    
@@ -555,7 +616,8 @@ const styles = StyleSheet.create({
 
   chat: {
     flex: 4,
-    backgroundColor:"#2A3036"
+    backgroundColor: "#2A3036",
+    padding:5,
   },
 
   pchat:{
@@ -567,16 +629,17 @@ const styles = StyleSheet.create({
     alignSelf:"flex-end"
   },
   chatCard: {
-    backgroundColor: "#363C41",
+    backgroundColor: "#4F5357",
     margin: 4,
+    marginTop:8,
     padding: 6,
-    borderRadius: 15,
+    borderRadius: 12,
     justifyContent: "space-between",
     maxWidth: 210,
     
   },
   chatdesc:{
-    fontSize: 14,
+    fontSize: 13,
     color: "#CACBCB",
     marginHorizontal: 5,
     paddingHorizontal: 5,
@@ -584,7 +647,7 @@ const styles = StyleSheet.create({
     maxWidth:120,
   },
   chatam: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#CACBCB",
     alignSelf: "center",
     marginHorizontal: 5,
@@ -624,23 +687,20 @@ const styles = StyleSheet.create({
   addBtn: {  
     justifyContent: "center",
     alignItems: "center",
-    alignSelf:"flex-end",
+  
     borderRadius: 50,
     height: 50,
     width: 50,
-    margin: 15,
+    margin: 12,
     borderColor: "#FF8157",
     borderWidth: 1,
     marginBottom: 28,
-   
-    paddingBottom:10,
   },
 
   addBtnText: {
-    fontSize: 35,
-  fontWeight:"200",
-    color: "darkslategrey",
-    
+    fontSize: 20,
+  fontWeight:"300",
+    alignSelf: "center",
   },
 
   heading: {
@@ -706,4 +766,3 @@ const styles = StyleSheet.create({
   },
 
 });
-
