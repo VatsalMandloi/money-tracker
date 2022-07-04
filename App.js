@@ -39,19 +39,22 @@ export default function App() {
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
   const [accounts, setaccounts] = useState(null);
+  const [account, setaccount] = useState(null);
   const [transactions, setTransactions] = useState(null);
   const [title, setTitle] = useState("👻");
-  const [tpay, setTpay] = useState(null);
-  const [treceive, setTreceive] = useState(null);
-  const [total, setTotal] = useState(null);
+  const [tpay, setTpay] = useState("0.0");
+  const [treceive, setTreceive] = useState("0.0");
+  const [total, setTotal] = useState("👌");
   const [date, setDate] = useState(null);
   const [modalVisible, setmodalVisibal] = useState(false);
   const [tranModalVisible, setTranModalVisible] = useState(false);
   const [side, setSide] = useState(null);
   const [selectedID, setSelID] = useState(null);
+  const [delID, setDelId] = useState(null);
   const pay = 1;
   const receive = 0;
-  
+  const month = ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
   useEffect(() => {
     db.transaction((tx) => {
       tx.executeSql(
@@ -80,38 +83,34 @@ const add = (text) => {
      
      db.transaction((tx) => {
       tx.executeSql(
-        "insert into accounts(name, tpay, treceive) values(?, 0, 0)", [text]);
+        "insert into accounts(name, tpay, treceive) values(?, 0.0, 0.0)", [text]);
       tx.executeSql("select * from accounts", [], (tx, results) => {
         setaccounts(results.rows._array)
       }
-      
       );
         },
-        
-        
       );
-        
- 
       setmodalVisibal(!modalVisible)
     }
   };
 
   const addTransaction = (id, desc, amount, side) => {
-    var pay = 0
-    var p = parseFloat(tpay)
-    var r = parseFloat(treceive)
+
     if (id === null) {
      return false
    }
     if (desc === null || desc === "") {
-      desc = "place emoji here";
+      desc = "🤑 😕 🧠✨";
     }
     if (amount === null || amount === "") {
       return false;
     }
     else {
+      var p = parseFloat(tpay)
+      var r = parseFloat(treceive)
+      var pay = 0;
       if (side) {
-        pay = parseFloat(tpay) + parseFloat(amount)
+       pay= parseFloat(tpay) + parseFloat(amount)
         p=pay
         setTpay(pay)
         db.transaction(
@@ -119,26 +118,28 @@ const add = (text) => {
             tx.executeSql("update accounts set tpay = ?  where id = ?", [pay, id]);
           }
         )
+        updateAcc(id)
       } else {
         pay = parseFloat(treceive) + parseFloat(amount)
         r=pay
         setTreceive(pay);
         db.transaction(
           (tx) => {
-            tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id]);
+            tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id],);
           }
         )
-       
+        updateAcc(id)
       }
-
+  
       setTotal(r - p)
       
-      const date = new Date().getDate();
+      const today = new Date();
+      const date = today.getDate()+" "+month[today.getMonth()]
+      console.log(date)
       db.transaction(
         (tx) => {
           tx.executeSql("insert into tansactions(accountid, desc, date, amount, side) values (?, ?, ?, ?, ?)", [id, desc, date, amount, side]);
-         
-          
+
           dbTran(id)
         }
       )
@@ -146,6 +147,43 @@ const add = (text) => {
     }
   };
 
+  const amountUpdate = (id,side,amount) => {
+    var p = parseFloat(tpay)
+    var r = parseFloat(treceive)
+    var pay = 0;
+    if (side) {
+     pay= parseFloat(tpay) - parseFloat(amount)
+      p=pay
+      setTpay(pay)
+      db.transaction(
+        (tx) => {
+          tx.executeSql("update accounts set tpay = ?  where id = ?", [pay, id]);
+        }
+      )
+    } else {
+      pay = parseFloat(treceive) - parseFloat(amount)
+      r=pay
+      setTreceive(pay);
+      db.transaction(
+        (tx) => {
+          tx.executeSql("update accounts set treceive = ?  where id = ?", [pay, id],);
+        }
+      )
+     
+    }
+    updateAcc(id)
+    setTotal(r - p)
+
+}
+  const updateAcc = (id) => {
+    db.transaction((tx) => {
+      tx.executeSql("select * from accounts", [], (tx, results) => {
+        setaccounts(results.rows._array)
+      }
+    
+      );
+    });
+}
   const updateMain = (account) => {
     setId(account.id)
     setTitle(account.name)
@@ -172,7 +210,10 @@ const add = (text) => {
     return (
       <View>
         <Pressable
-          onPress={() => { updateMain(item) }}
+          onPress={() => {
+            
+            updateMain(item)
+          }}
         
           style={ [styles.avatar,{borderColor:(item.id===selectedID)?"#FF8157":"#0000",borderWidth:1}]}>
           <Text style={styles.avatarTitle}>{item.name}</Text>
@@ -183,13 +224,23 @@ const add = (text) => {
 
   const chat = ({ item }) => {
     return (
-      <View style={[ item.side?styles.pchat: styles.rchat, styles.chatCard, styles.flexRow ]}>
+      <View >
+        <Pressable
+          onLongPress={
+            ()=>{delTran(item.id,item.accountid,item.side,item.amount)}
+        }
+          style={({ pressed }) => [{ backgroundColor: pressed ? "#867979" : "#0000" }]}> 
+       
+          <View style={ [item.side?styles.pchat: styles.rchat, styles.chatCard, styles.flexRow ]}>
         <View style={styles.flexColumn}>
-        <Text style={styles.chatdesc}>{item.desc}</Text>
-        <Text style={styles.chatdesc}>{ item.date}</Text>
+              <Text style={[ styles.chatdesc, {fontSize:10, color:"grey"}]}>{ item.date}</Text>
+              <Text style={styles.chatdesc}>{item.desc}</Text>
+      
        </View> 
-        <Text style={styles.chatam}>{ item.amount}</Text>
-
+            <Text style={styles.chatam}>{item.amount}</Text>
+            </View>
+            
+        </Pressable>
                 </View>
     );
   };
@@ -197,11 +248,22 @@ const add = (text) => {
   const initialState = () => {
     setId(null)
     setTitle("👻")
-    setTotal(null)
-    setTpay(null)
-    setTreceive(null)
+    setTotal("👌")
+    setTpay("0.0")
+    setTreceive("0.0")
     setTransactions(null)
   }
+
+  const delTran = (id,accountid,side,amount) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql(`delete from tansactions where id = ?;`, [id]);
+    }
+    )
+    dbTran(accountid)
+    amountUpdate(accountid,side,amount)
+}
+
 const  delAccount=(id)=>{
   
   db.transaction(
