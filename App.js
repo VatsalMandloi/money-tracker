@@ -100,7 +100,7 @@ const add = (text) => {
      return false
    }
     if (desc === null || desc === "") {
-      desc = "🤑 😕 🧠✨";
+      desc = "🤑🚀🧠✨";
     }
     if (amount === null || amount === "") {
       return false;
@@ -193,7 +193,6 @@ const add = (text) => {
     dbTran(account.id)
     setSelID(account.id)
   }
-
 
   const dbTran = (id) => {
     db.transaction(
@@ -303,7 +302,6 @@ const  delAccount=(id)=>{
     )
   
 
-
   return (
     
     <View style={styles.container}>
@@ -357,7 +355,7 @@ const  delAccount=(id)=>{
                           fontSize: 16,
                           marginRight:25, }}>Close</Text>)}
                       </Pressable>
-                      
+             
                     <Pressable
                         onPress={() => {
                           add(text);
@@ -385,8 +383,8 @@ const  delAccount=(id)=>{
             setmodalVisibal(!modalVisible);
                 }}
               style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn]}>
-                {({ pressed }) =>(<Text style={[styles.addBtnText,
-                { color: pressed?"#101820FF":"#FF8157" }]}> + </Text>)}
+                {({ pressed }) =>(<Text style={[
+                { color: pressed?"#101820FF":"#FF8157" },styles.addBtnText]}> + </Text>)}
         </Pressable>
             
             </View>
@@ -419,8 +417,9 @@ const  delAccount=(id)=>{
                 <TextInput
                   onChangeText={(amount) => setAmount(amount)}
                   onSubmitEditing={() => {
-                  
+                    addTransaction(id, desc, amount, side);
                     setAmount(null);
+                    setDesc(null);
                   }}
                   placeholder="Enter Amount"
                   style={styles.input}
@@ -472,7 +471,7 @@ const  delAccount=(id)=>{
                       }}
                        disabled={id === null?true:false}
                       style={({pressed})=>[styles.delBtn,{backgroundColor:pressed?"#ff5757":"#0000"}]}>
-                      {({ pressed })=>( <Text style={[{ color:pressed?"white":"#ff5757" }]}>Delete</Text>)}
+                      {({ pressed })=>( <Text style={[{ color:pressed?"white":"#ff5757",fontSize:12 }]}>Delete</Text>)}
                      
                     </Pressable>
                   </View>
@@ -501,14 +500,14 @@ const  delAccount=(id)=>{
                 
                 <View style={[styles.flexRow,{ marginTop:5}]}>
                   <Text style={{
-                  fontSize: 16,
+                  fontSize: 14,
                 paddingLeft:15,
              marginTop:2,
                   color: "#B9B9BA",
                 }}>Net Total: </Text>
                   
                   <Text style={{
-                  fontSize: 19,
+                  fontSize: 16,
                 
                   color: total===0?"#CACBCB":total>0?"#41BF5B":"#ff5757"
                 }}> {total} </Text>
@@ -583,13 +582,13 @@ const styles = StyleSheet.create({
   mainHeader: {
     flex: 1,
     backgroundColor: "#1E252C",
-    justifyContent: "space-evenly",
-    alignItems: "center",
+    justifyContent:"space-evenly"
+  
     
   },
   
   title: {
-    fontSize: 22,
+    fontSize: 18,
     color:"#CACBCB",
     justifyContent:"space-evenly"
 },
@@ -604,7 +603,7 @@ const styles = StyleSheet.create({
   },
   
   headersub: {
-    fontSize:19,
+    fontSize:16,
     margin: 5,
     padding: 5,
    
@@ -617,7 +616,8 @@ const styles = StyleSheet.create({
 
   chat: {
     flex: 4,
-    backgroundColor:"#2A3036"
+    backgroundColor: "#2A3036",
+    padding:5,
   },
 
   pchat:{
@@ -629,16 +629,17 @@ const styles = StyleSheet.create({
     alignSelf:"flex-end"
   },
   chatCard: {
-    backgroundColor: "#363C41",
+    backgroundColor: "#4F5357",
     margin: 4,
+    marginTop:8,
     padding: 6,
-    borderRadius: 15,
+    borderRadius: 12,
     justifyContent: "space-between",
     maxWidth: 210,
     
   },
   chatdesc:{
-    fontSize: 14,
+    fontSize: 13,
     color: "#CACBCB",
     marginHorizontal: 5,
     paddingHorizontal: 5,
@@ -646,7 +647,7 @@ const styles = StyleSheet.create({
     maxWidth:120,
   },
   chatam: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#CACBCB",
     alignSelf: "center",
     marginHorizontal: 5,
@@ -686,23 +687,20 @@ const styles = StyleSheet.create({
   addBtn: {  
     justifyContent: "center",
     alignItems: "center",
-    alignSelf:"flex-end",
+  
     borderRadius: 50,
     height: 50,
     width: 50,
-    margin: 15,
+    margin: 12,
     borderColor: "#FF8157",
     borderWidth: 1,
     marginBottom: 28,
-   
-    paddingBottom:10,
   },
 
   addBtnText: {
-    fontSize: 35,
-  fontWeight:"200",
-    color: "darkslategrey",
-    
+    fontSize: 20,
+  fontWeight:"300",
+    alignSelf: "center",
   },
 
   heading: {
@@ -768,4 +766,3 @@ const styles = StyleSheet.create({
   },
 
 });
-
