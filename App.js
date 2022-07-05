@@ -9,11 +9,12 @@ import {
   Pressable,
   FlatList,
   Alert,
-  StatusBar,
+  Linking,
+  Share,
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
-
+import { useFonts } from "expo-font";
 
 
 function openDatabase() {
@@ -39,18 +40,17 @@ export default function App() {
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
   const [accounts, setaccounts] = useState(null);
-  const [account, setaccount] = useState(null);
   const [transactions, setTransactions] = useState(null);
   const [title, setTitle] = useState("👻");
   const [tpay, setTpay] = useState("0.0");
   const [treceive, setTreceive] = useState("0.0");
   const [total, setTotal] = useState("👌");
-  const [date, setDate] = useState(null);
   const [modalVisible, setmodalVisibal] = useState(false);
+  const [hamVisible, setHamVisibal] = useState(false);
   const [tranModalVisible, setTranModalVisible] = useState(false);
   const [side, setSide] = useState(null);
   const [selectedID, setSelID] = useState(null);
-  const [delID, setDelId] = useState(null);
+  const back = "<";
   const pay = 1;
   const receive = 0;
   const month = ['jan', 'feb', 'mar', 'apr', 'may', 'june', 'july', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -72,6 +72,41 @@ export default function App() {
       );
     });
   }, []);
+
+  const [loaded] = useFonts({
+    nunito: require('./assets/fonts/Nunito.ttf'),
+    barcode: require('./assets/fonts/barcode.ttf')
+})
+  const [loadbar] = useFonts({
+  barcode:require('./assets/fonts/barcode.ttf')
+})
+  if (!loadbar) {
+    return null;
+  }
+  if (!loaded) {
+    return null;
+  }
+  
+  const onShare = async () => {
+    try {
+      const results = await Share.share({
+        title: "Money Tracker",
+        message: "Money Tracker: The most productive way to track all the transactions among peers, Applink:",
+        url:""
+      });
+      if (results.action === Share.sharedAction) {
+        if (results.activityType) {
+          
+        } else {
+          
+        }
+      } else if(results.action === Share.dismissedAction) {
+        
+      }
+    } catch (error) {
+      alert(error.message);
+  }
+}
 
 const add = (text) => {
     // is text empty?
@@ -318,6 +353,9 @@ const  delAccount=(id)=>{
           <>
             <View style={[styles.flexColumn, styles.sidenav]}> 
             
+             
+
+
             <Modal
                 transparent={true}
                 visible={modalVisible}
@@ -368,10 +406,54 @@ const  delAccount=(id)=>{
                 </View>
                 </View>
               </Modal>
+
+              <Modal
+                visible={hamVisible}
+                animationType="slide"
+                transparent={false}
+                onRequestClose={() => {
+                  setHamVisibal(!hamVisible);
+                }}
+               >
+                <View style={styles.ham}>
+                 
+                <View >
+                    <Pressable
+                    onPress={() => {
+                      setHamVisibal(!hamVisible)
+                    }}
+                    style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn]}>
+                    {({ pressed }) => (<Text style={
+                      [{ color: pressed ? "#101820FF" : "#FF8157" }, styles.addBtnText]}>{back}</Text>)}
+                    </Pressable>
+                    <View style={[styles.Hheader]}>
+                  <View>
+                    <Text style={styles.HHtitle}>Hey Curious!!</Text>
+                    <Text style={styles.Hsubtitle}>Hope you are having fun!!</Text>
+                  </View>
+                  <View style={styles.Hcontent}>
+                        <Pressable
+                          onPress={() => Linking.openURL('https://vatsalmandloi.netlify.app/')}>
+                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Meet the developer.</Text>)}</Pressable>
+                          <Pressable
+                          onPress={onShare}>
+                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Share.</Text>)}</Pressable>
+                        <Pressable
+                          onPress={() => Linking.openURL('https://bubblewrap-neo.netlify.app/')}>
+                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>I'm Bored.</Text>)}</Pressable>
+                    </View></View>
+                    </View>
+                  <View style={styles.Hfooter}>
+                    <Text style={styles.HFtitle}>Vatsal</Text>
+                    <Text style={styles.HFsubtitle}>Made with ❤️ in India</Text>
+                  </View>
+                    </View>
              
+              </Modal>
+
               <Pressable
           onPress={() => {
-            setmodalVisibal(!modalVisible);
+            setHamVisibal(!hamVisible);
                 }}
               style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn,{marginBottom:14}]}>
                 {({ pressed }) =>(<Text style={[
@@ -567,6 +649,61 @@ const styles = StyleSheet.create({
   main: {
     flex:1,
   },
+  ham: {
+    backgroundColor: "#101820FF",
+    padding: 10,
+    justifyContent: "space-between",
+   flex:1,
+  },
+  Hheader: {
+    paddingLeft: 25,
+  },
+  Hcontent: {
+    margin: 10,
+    paddingTop: 30,
+   paddingLeft:22,
+  },
+  Hlink: {
+    color: "grey",
+    paddingVertical:15,
+    fontSize: 25,
+    fontFamily:"nunito"
+},
+  Hfooter: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 5,
+    margin:5,
+  },
+
+  HHtitle: {
+    color: "grey",
+    fontSize: 40,
+    fontFamily: "nunito",
+   
+  },
+  
+  Hsubtitle:{
+    color: "grey",
+    paddingLeft: 14,
+    fontFamily:"nunito",
+  },
+
+  HFtitle: {
+    fontSize: 48,
+    alignItems:"center",
+    color: "white",
+    fontFamily: "barcode",
+    padding: 8,
+    margin:8,
+  },
+  HFsubtitle: {
+    color: "white",
+    fontSize:15,
+    padding: 4,
+    margin: 8,
+    fontFamily:"nunito",
+  },
   sidenav: {
     backgroundColor: "#101820FF",
     alignItems: "center",
@@ -577,7 +714,7 @@ const styles = StyleSheet.create({
     width: 50,
     height:50,
     padding: 5,
-    margin: 8,
+    margin: 5,
     borderRadius: 8,
     alignItems: "center",
     justifyContent:"center",
@@ -585,7 +722,8 @@ const styles = StyleSheet.create({
 
   avatarTitle: {
     color: "#CACBCB",
-    fontSize:14,
+    fontSize: 14,
+    
   },
 
   mainHeader: {
@@ -601,12 +739,15 @@ const styles = StyleSheet.create({
 
   subTitle: {
     fontSize: 16,
+    fontFamily:"nunito"
   },
   
   title: {
     fontSize: 18,
-    color:"#CACBCB",
-    justifyContent:"space-evenly"
+    color: "#CACBCB",
+    justifyContent: "space-evenly",
+   
+    
 },
 
   delBtn:{
@@ -648,7 +789,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     paddingHorizontal: 5,
     flexWrap: "wrap",
-    maxWidth:120,
+    maxWidth: 120,
+   
   },
   chatam: {
     fontSize: 16,
@@ -658,7 +800,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingLeft:15,
     borderLeftWidth: 1,
-    borderLeftColor:"grey"
+    borderLeftColor: "grey",
   },
   mainBottom: {
     flex:1.2,
@@ -705,12 +847,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
   fontWeight:"300",
     alignSelf: "center",
+    
   },
 
   heading: {
     fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
+    fontFamily:"nunito"
   },
 
   flexRow: {
