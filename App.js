@@ -369,6 +369,15 @@ const  delAccount=(id)=>{
                 </View>
               </Modal>
              
+              <Pressable
+          onPress={() => {
+            setmodalVisibal(!modalVisible);
+                }}
+              style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn,{marginBottom:14}]}>
+                {({ pressed }) =>(<Text style={[
+                { color: pressed?"#101820FF":"#FF8157" },styles.addBtnText]}> # </Text>)}
+        </Pressable>
+
                 <FlatList
                   data={accounts}
                   renderItem={renderItem}
@@ -382,7 +391,7 @@ const  delAccount=(id)=>{
           onPress={() => {
             setmodalVisibal(!modalVisible);
                 }}
-              style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000"},styles.addBtn]}>
+              style={({ pressed }) => [{backgroundColor:pressed?"#FF8157":"#0000",},styles.addBtn]}>
                 {({ pressed }) =>(<Text style={[
                 { color: pressed?"#101820FF":"#FF8157" },styles.addBtnText]}> + </Text>)}
         </Pressable>
@@ -455,8 +464,8 @@ const  delAccount=(id)=>{
                             </Modal>
                           
 
-                          <View style={[styles.mainHeader, styles.flexColumn]}>
-                <View style={[styles.flexRow]}>
+                          <View style={[ styles.flexColumn, styles.mainHeader]}>
+                <View style={[styles.flexRow, styles.subpart]}>
                   <View style={{flex:3,alignItems:"center"}}>
                   <Text style={[styles.title]}>{title}
                   </Text>
@@ -479,9 +488,9 @@ const  delAccount=(id)=>{
                 </View> 
 
                             <View style={[styles.flexRow, styles.subpart]}>
-                  <Text style={[{ color: "#ff5757" }, styles.headersub]}>- {tpay}</Text>
-                  
-                  <Text style={[{ color: "#7ed975" }, styles.headersub]}>+ { treceive}</Text>
+                  <Text style={[{ color: "#ff5757" }, styles.subTitle]}>- {tpay}</Text>
+                  <Text style={[styles.subTitle,{color:"grey"}]}>|</Text>
+                  <Text style={[{ color: "#7ed975" }, styles.subTitle,]}>+ { treceive}</Text>
                             </View>
                             </View>
                             
@@ -561,7 +570,7 @@ const styles = StyleSheet.create({
   sidenav: {
     backgroundColor: "#101820FF",
     alignItems: "center",
-    paddingTop:25,
+    paddingTop:12,
   },
   avatar: {
     backgroundColor:"#2A3036",
@@ -582,9 +591,16 @@ const styles = StyleSheet.create({
   mainHeader: {
     flex: 1,
     backgroundColor: "#1E252C",
-    justifyContent:"space-evenly"
-  
-    
+    justifyContent:"space-evenly",
+  },
+
+  subpart: {
+    margin:4,
+   justifyContent:"space-evenly"
+},
+
+  subTitle: {
+    fontSize: 16,
   },
   
   title: {
@@ -598,24 +614,12 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderRadius: 4,
         padding: 4,
-      marginRight:4,
+      marginRight:10,
       alignItems: "center",  
   },
-  
-  headersub: {
-    fontSize:16,
-    margin: 5,
-    padding: 5,
-   
-  },
-
-  subpart: {
-    justifyContent: "center",
-    alignItems:"center"
-},
 
   chat: {
-    flex: 4,
+    flex: 5,
     backgroundColor: "#2A3036",
     padding:5,
   },
@@ -657,7 +661,7 @@ const styles = StyleSheet.create({
     borderLeftColor:"grey"
   },
   mainBottom: {
-    flex:1,
+    flex:1.2,
     backgroundColor: "#1E252C",
     justifyContent: "space-evenly",
   },
