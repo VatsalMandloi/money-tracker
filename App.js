@@ -92,8 +92,8 @@ export default function App() {
     try {
       const results = await Share.share({
         title: "Money Tracker",
-        message: "Money Tracker: The most productive way to track all the transactions among peers, Applink:https://play.google.com/store/apps/developer?id=Vatsal+Mandloi",
-        url:"https://play.google.com/store/apps/developer?id=Vatsal+Mandloi"
+        message: "Money Tracker: The most productive way to track all the transactions among peers, Applink: https://play.google.com/store/apps/details?id=com.vatsal.moneytracker",
+        url:"https://play.google.com/store/apps/details?id=com.vatsal.moneytracker"
       });
       if (results.action === Share.sharedAction) {
         if (results.activityType) {
@@ -443,7 +443,7 @@ const  delAccount=(id)=>{
                           {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Share.</Text>)}</Pressable>
                         <Pressable
                           onPress={() => Linking.openURL('https://play.google.com/store/apps/developer?id=Vatsal+Mandloi')}>
-                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Other apps.</Text>)}</Pressable>
+                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Other Apps.</Text>)}</Pressable>
                     </View></View>
                     </View>
                   <View style={styles.Hfooter}>
