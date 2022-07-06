@@ -11,6 +11,7 @@ import {
   Alert,
   Linking,
   Share,
+  StatusBar,
 } from "react-native";
 import Constants from "expo-constants";
 import * as SQLite from "expo-sqlite";
@@ -91,8 +92,8 @@ export default function App() {
     try {
       const results = await Share.share({
         title: "Money Tracker",
-        message: "Money Tracker: The most productive way to track all the transactions among peers, Applink:",
-        url:""
+        message: "Money Tracker: The most productive way to track all the transactions among peers, Applink:https://play.google.com/store/apps/developer?id=Vatsal+Mandloi",
+        url:"https://play.google.com/store/apps/developer?id=Vatsal+Mandloi"
       });
       if (results.action === Share.sharedAction) {
         if (results.activityType) {
@@ -340,7 +341,9 @@ const  delAccount=(id)=>{
   return (
     
     <View style={styles.container}>
-     
+      <StatusBar
+        backgroundColor={"#101820FF"}
+     />
       {Platform.OS === "web" ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
@@ -428,7 +431,7 @@ const  delAccount=(id)=>{
                     </Pressable>
                     <View style={[styles.Hheader]}>
                   <View>
-                    <Text style={styles.HHtitle}>Hey Curious!!</Text>
+                    <Text style={styles.HHtitle}>Hey, Curious!!</Text>
                     <Text style={styles.Hsubtitle}>Hope you are having fun!!</Text>
                   </View>
                   <View style={styles.Hcontent}>
@@ -439,8 +442,8 @@ const  delAccount=(id)=>{
                           onPress={onShare}>
                           {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Share.</Text>)}</Pressable>
                         <Pressable
-                          onPress={() => Linking.openURL('https://bubblewrap-neo.netlify.app/')}>
-                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>I'm Bored.</Text>)}</Pressable>
+                          onPress={() => Linking.openURL('https://play.google.com/store/apps/developer?id=Vatsal+Mandloi')}>
+                          {({ pressed }) => (<Text style={[styles.Hlink, { color: pressed ? "#FF8157" : "grey" }]}>Other apps.</Text>)}</Pressable>
                     </View></View>
                     </View>
                   <View style={styles.Hfooter}>
@@ -824,10 +827,8 @@ const styles = StyleSheet.create({
   
   container: {
     backgroundColor: "#fff",
-    flex: 1,
-    paddingTop: Constants.statusBarHeight,
+    flex:1,
     flexDirection: "row",
-    
   },
 
   addBtn: {  
