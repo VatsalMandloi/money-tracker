@@ -5,7 +5,8 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+  
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -23,9 +24,10 @@
     "android": {
       "package": "com.vatsal.moneytracker",
       "versionCode":2,
+      "userInterfaceStyle": "dark",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#101820"
       }
     },
     "web": {

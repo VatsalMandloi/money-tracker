@@ -40,7 +40,10 @@ export default function App() {
   const [id, setId] = useState(null);
   const [desc, setDesc] = useState(null);
   const [amount, setAmount] = useState(null);
-  const [accounts, setaccounts] = useState(null);
+  const [accounts, setaccounts] = useState([{
+    "id": "1",
+    "name":"asdf"
+  }]);
   const [transactions, setTransactions] = useState(null);
   const [title, setTitle] = useState("👻");
   const [tpay, setTpay] = useState("0.0");
@@ -127,6 +130,7 @@ const add = (text) => {
         },
       );
       setmodalVisibal(!modalVisible)
+     
     }
   };
 
@@ -216,8 +220,9 @@ const add = (text) => {
       tx.executeSql("select * from accounts", [], (tx, results) => {
         setaccounts(results.rows._array)
       }
-    
+   
       );
+  
     });
 }
   const updateMain = (account) => {
@@ -710,7 +715,8 @@ const styles = StyleSheet.create({
   sidenav: {
     backgroundColor: "#101820FF",
     alignItems: "center",
-    paddingTop:12,
+    paddingTop: 12,
+   
   },
   avatar: {
     backgroundColor:"#2A3036",
@@ -874,7 +880,7 @@ const styles = StyleSheet.create({
 
   modal: {
     margin: 40,
-    backgroundColor: "#5B5E60",
+    backgroundColor: "#4F5357",
     borderRadius: 20,
     padding: 30,
     borderColor: "#DCDCDC",
