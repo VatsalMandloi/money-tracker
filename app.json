@@ -2,7 +2,7 @@
   "expo": {
     "name": "money-tracker",
     "slug": "money-tracker",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
     },
     "android": {
       "package": "com.vatsal.moneytracker",
-      "versionCode":2,
+      "versionCode":3,
       "userInterfaceStyle": "dark",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
